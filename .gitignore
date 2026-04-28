@@ -1,0 +1,9 @@
+backend/.env
+backend/logs/
+backend/*.log
+backend/node_modules/
+frontend-src/node_modules/
+agends.md
+docs
+frontend
+videos_cursos

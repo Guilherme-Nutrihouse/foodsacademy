@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="Foods Academy" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <title>Foods Academy</title>
+    <script>
+      (function () {
+        function enhanceLoginForm() {
+          var user = document.getElementById("usuario");
+          var password = document.getElementById("senha");
+          var form = (password && password.form) || (user && user.form);
+          if (form) {
+            form.setAttribute("autocomplete", "on");
+            form.setAttribute("method", "post");
+            form.setAttribute("action", "/api/authenticate");
+          }
+          if (user) {
+            user.setAttribute("name", "username");
+            user.setAttribute("autocomplete", "username");
+          }
+          if (password) {
+            password.setAttribute("name", "password");
+            password.setAttribute("autocomplete", "current-password");
+          }
+        }
+        function observe() {
+          enhanceLoginForm();
+          var root = document.getElementById("root") || document.body;
+          if (root) new MutationObserver(enhanceLoginForm).observe(root, { childList: true, subtree: true });
+        }
+        if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", observe);
+        else observe();
+      })();
+    </script>
+  </head>
+  <body>
+    <noscript>Voce precisa habilitar JavaScript para executar este app.</noscript>
+    <div id="root"></div>
+  </body>
+</html>
