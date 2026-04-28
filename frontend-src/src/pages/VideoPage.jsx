@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar.jsx";
 
 const VideoPage = () => {
   const { id } = useParams();
   const [videos, setVideos] = useState([]);
-  const [modulos, setModulos] = useState([]); 
+  const [modulos, setModulos] = useState([]);
   const [temModulos, setTemModulos] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -21,24 +21,19 @@ const VideoPage = () => {
         const res = await fetch(`/api/videos/${id}`);
         const data = await res.json();
 
-        // 🔹 Detecta o tipo de retorno
         if (Array.isArray(data)) {
-          // curso sem módulos
           setVideos(data);
           setTemModulos(false);
           if (data.length > 0) setSelectedVideo(data[0]);
         } else if (data.tipo === "com_modulos") {
-          // curso com módulos
           setModulos(data.modulos);
           setTemModulos(true);
 
-          // seleciona o primeiro vídeo do primeiro módulo
           const primeiroModulo = data.modulos[0];
           if (primeiroModulo && primeiroModulo.videos?.length > 0) {
             setSelectedVideo(primeiroModulo.videos[0]);
           }
         } else if (data.tipo === "sem_modulos") {
-          // curso sem módulos, mas com novo formato
           setVideos(data.videos);
           setTemModulos(false);
           if (data.videos.length > 0) setSelectedVideo(data.videos[0]);
@@ -69,59 +64,54 @@ const VideoPage = () => {
     }
   };
 
+  const sidebarProps = {
+    modulos: temModulos ? modulos : [],
+    videos: temModulos ? [] : videos,
+    setSelectedVideo,
+    watchedVideos,
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
-        <Sidebar
-          modulos={temModulos ? modulos : []}
-          videos={temModulos ? [] : videos}
-          setSelectedVideo={setSelectedVideo}
-          watchedVideos={watchedVideos}
-        />
-        <div className="flex-1 ml-72 p-8 flex items-center justify-center">
-          <h1 className="text-2xl font-semibold text-gray-700">
+      <div className="min-h-screen bg-gray-50">
+        <Sidebar {...sidebarProps} />
+        <main className="flex min-h-screen w-full items-center justify-center px-4 pb-8 pt-24 sm:px-6 md:pl-[332px] md:pr-8 md:pt-8">
+          <h1 className="text-center text-xl font-semibold text-gray-700 sm:text-2xl">
             Carregando vídeo...
           </h1>
-        </div>
+        </main>
       </div>
     );
   }
 
   if (!temModulos && videos.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="min-h-screen bg-gray-50">
         <Sidebar />
-        <div className="flex-1 ml-72 p-8 flex items-center justify-center">
-          <h1 className="text-3xl font-bold text-gray-800">
+        <main className="flex min-h-screen w-full items-center justify-center px-4 pb-8 pt-24 sm:px-6 md:pl-[332px] md:pr-8 md:pt-8">
+          <h1 className="text-center text-2xl font-bold text-gray-800 sm:text-3xl">
             Nenhum vídeo encontrado para este curso
           </h1>
-        </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar dinâmica */}
-      <Sidebar
-        modulos={temModulos ? modulos : []}
-        videos={temModulos ? [] : videos}
-        setSelectedVideo={setSelectedVideo}
-        watchedVideos={watchedVideos}
-      />
+    <div className="min-h-screen bg-gray-50">
+      <Sidebar {...sidebarProps} />
 
-      {/* Player principal */}
-      <div className="flex-1 ml-72 p-8 flex flex-col items-center">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+      <main className="flex min-h-screen w-full flex-col items-center px-4 pb-8 pt-24 sm:px-6 md:pl-[332px] md:pr-8 md:pt-8">
+        <h1 className="mb-5 max-w-5xl break-words text-center text-xl font-bold text-gray-800 sm:text-2xl md:mb-6 md:text-3xl">
           {selectedVideo ? selectedVideo.titulo : "Carregando vídeo..."}
         </h1>
 
-        <div className="w-[80%] max-w-5xl aspect-video bg-black rounded-xl shadow-2xl overflow-hidden mb-6">
+        <div className="aspect-video w-full max-w-5xl overflow-hidden rounded-lg bg-black shadow-2xl sm:rounded-xl">
           {selectedVideo && (
             <video
               ref={videoRef}
               key={selectedVideo.url}
-              className="w-full h-full object-contain"
+              className="h-full w-full object-contain"
               controls
               onEnded={handleVideoEnded}
             >
@@ -130,7 +120,7 @@ const VideoPage = () => {
             </video>
           )}
         </div>
-      </div>
+      </main>
     </div>
   );
 };

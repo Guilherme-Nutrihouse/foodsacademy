@@ -5,58 +5,53 @@ import Sidebar from "../components/Sidebar.jsx";
 const MaterialPage = () => {
   const { id } = useParams();
 
-  // Materiais separados por ID 
   const materiaisPorModulo = {
     1: [
       { titulo: "Guia de Boas-Vindas", tipo: "PDF", tamanho: "1.2 MB" },
-      { titulo: "Apresentação – Aula 01", tipo: "Slides", tamanho: "2.1 MB" },
+      { titulo: "Apresentação - Aula 01", tipo: "Slides", tamanho: "2.1 MB" },
     ],
     2: [
       { titulo: "Manual de Liderança", tipo: "PDF", tamanho: "2.3 MB" },
-      { titulo: "Atividades – Aula 02", tipo: "Excel", tamanho: "900 KB" },
+      { titulo: "Atividades - Aula 02", tipo: "Excel", tamanho: "900 KB" },
     ],
-    3: [
-      { titulo: "Guia de Desenvolvimento", tipo: "PDF", tamanho: "1.8 MB" },
-    ],
+    3: [{ titulo: "Guia de Desenvolvimento", tipo: "PDF", tamanho: "1.8 MB" }],
   };
 
   const materiais = materiaisPorModulo[id] || [];
 
   return (
-    <main className="relative min-h-screen bg-[#FAF9F7] font-[Poppins,sans-serif]">
-      {/* Sidebar */}
+    <main className="relative min-h-screen overflow-x-hidden bg-[#FAF9F7] font-[Poppins,sans-serif]">
       <Sidebar showButton={false} />
 
-      {/* Conteúdo principal */} 
-      <section className="ml-72 p-8 flex flex-col items-center">
-        <div className="flex flex-col justify-center w-full max-w-6xl">
-          {/* Título centralizado horizontalmente */}
-          <h1 className="text-3xl font-bold text-center mb-10">
-            Materiais de Apoio – Aula {id}
+      <section className="w-full px-4 pb-8 pt-24 sm:px-6 md:pl-[332px] md:pr-8 md:pt-8">
+        <div className="mx-auto flex w-full max-w-6xl flex-col justify-center">
+          <h1 className="mb-8 break-words text-center text-2xl font-bold sm:text-3xl md:mb-10">
+            Materiais de Apoio - Aula {id}
           </h1>
 
-          {/* Materiais */}
           {materiais.length === 0 ? (
-            <p className="text-center text-gray-500 text-lg">
+            <p className="text-center text-base text-gray-500 sm:text-lg">
               Nenhum material disponível para este módulo.
             </p>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {materiais.map((m, i) => (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:gap-6 xl:grid-cols-3">
+              {materiais.map((material, i) => (
                 <div
                   key={i}
-                  className="bg-white shadow-lg rounded-xl p-6 flex flex-col items-center text-center hover:shadow-xl transition duration-300"
+                  className="flex flex-col items-center rounded-lg bg-white p-5 text-center shadow-lg transition duration-300 hover:shadow-xl sm:p-6"
                 >
                   <img
                     src="https://cdn-icons-png.flaticon.com/512/337/337946.png"
                     alt="Material"
-                    className="w-20 mb-4"
+                    className="mb-4 w-16 sm:w-20"
                   />
-                  <h3 className="font-semibold text-gray-800 mb-2">{m.titulo}</h3>
-                  <p className="text-gray-500 text-sm mb-4">
-                    {m.tipo} • {m.tamanho}
+                  <h2 className="mb-2 break-words font-semibold text-gray-800">
+                    {material.titulo}
+                  </h2>
+                  <p className="mb-4 text-sm text-gray-500">
+                    {material.tipo} - {material.tamanho}
                   </p>
-                  <button className="bg-[#B95758] text-white px-5 py-2 rounded-lg font-medium hover:bg-[#e14d3a] transition duration-300">
+                  <button className="rounded-lg bg-[#B95758] px-5 py-2 font-medium text-white transition duration-300 hover:bg-[#e14d3a]">
                     Baixar
                   </button>
                 </div>

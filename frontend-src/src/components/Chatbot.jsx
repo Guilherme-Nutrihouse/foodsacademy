@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import ChatbotIcon from "../assets/images/chatbot2.png";
-import chatbotData from "../data/chatbotData.js"; 
+import chatbotData from "../data/chatbotData.js";
 
 function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [mensagens, setMensagens] = useState([
-    { de: "bot", texto: gerarMenu("Menu Principal") }
+    { de: "bot", texto: gerarMenu("Menu Principal") },
   ]);
   const [entrada, setEntrada] = useState("");
   const [contexto, setContexto] = useState("Menu Principal");
@@ -25,20 +25,21 @@ function Chatbot() {
 
     if (op) {
       if (op.resposta) {
-        // Resposta final
         setMensagens((prev) => [...prev, { de: "bot", texto: op.resposta }]);
-
-        // Volta ao menu principal
-        setMensagens((prev) => [...prev, { de: "bot", texto: gerarMenu("Menu Principal") }]);
+        setMensagens((prev) => [
+          ...prev,
+          { de: "bot", texto: gerarMenu("Menu Principal") },
+        ]);
         setContexto("Menu Principal");
       } else if (op.next) {
-        // Submenu
         setMensagens((prev) => [...prev, { de: "bot", texto: gerarMenu(op.next) }]);
         setContexto(op.next);
       }
     } else {
-      // Caso inválido
-      setMensagens((prev) => [...prev, { de: "bot", texto: "Opção inválida, tente novamente." }]);
+      setMensagens((prev) => [
+        ...prev,
+        { de: "bot", texto: "Opção inválida, tente novamente." },
+      ]);
     }
 
     setEntrada("");
@@ -46,34 +47,34 @@ function Chatbot() {
 
   return (
     <>
-      {/* Botão flutuante */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-4 right-6 z-40 w-16 h-16 rounded-full bg-[#EAB308] shadow-lg hover:bg-yellow-400 transition grid place-items-center"
+        className="fixed bottom-4 right-4 z-40 grid h-14 w-14 place-items-center rounded-full bg-[#EAB308] shadow-lg transition hover:bg-yellow-400 sm:right-6 sm:h-16 sm:w-16"
         aria-label="Abrir Chatbot"
       >
-        <img src={ChatbotIcon} alt="Chatbot" className="w-8 h-8" />
+        <img src={ChatbotIcon} alt="Chatbot" className="h-8 w-8" />
       </button>
 
-      {/* 🔹 Janela do chatbot */}
       <div
-        className={`fixed bottom-24 right-6 w-80 h-96 bg-white border border-gray-300 rounded-2xl shadow-xl z-40 flex flex-col transition-all duration-300 ease-in-out
-          ${isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}
+        className={`fixed bottom-24 left-3 right-3 z-40 flex h-96 max-h-[calc(100vh-8rem)] flex-col rounded-lg border border-gray-300 bg-white shadow-xl transition-all duration-300 ease-in-out sm:left-auto sm:right-6 sm:w-80 ${
+          isOpen ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0"
+        }`}
       >
-        {/* Cabeçalho */}
-        <div className="p-3 bg-[#80B5B4] text-white font-bold rounded-t-2xl">
-          Assistente NH 🤖
+        <div className="rounded-t-lg bg-[#80B5B4] p-3 font-bold text-white">
+          Assistente NH
         </div>
 
-        {/* Área de mensagens */}
-        <div className="flex-grow overflow-auto p-4 space-y-2">
+        <div className="flex-grow space-y-2 overflow-auto p-4">
           {mensagens.map((msg, i) => (
-            <div key={i} className={`flex ${msg.de === "user" ? "justify-end" : "justify-start"}`}>
+            <div
+              key={i}
+              className={`flex ${msg.de === "user" ? "justify-end" : "justify-start"}`}
+            >
               <div
-                className={`px-3 py-2 rounded-lg max-w-[80%] whitespace-pre-wrap ${
+                className={`max-w-[80%] whitespace-pre-wrap break-words rounded-lg px-3 py-2 text-sm ${
                   msg.de === "user"
-                    ? "bg-yellow-100 text-gray-800 text-sm"
-                    : "bg-gray-100 text-gray-800 text-sm"
+                    ? "bg-yellow-100 text-gray-800"
+                    : "bg-gray-100 text-gray-800"
                 }`}
               >
                 {msg.texto}
@@ -82,21 +83,33 @@ function Chatbot() {
           ))}
         </div>
 
-        {/* Campo de entrada */}
-        <div className="p-2 border-t bg-gray-50 flex gap-2">
+        <div className="flex gap-2 border-t bg-gray-50 p-2">
           <input
             type="text"
             value={entrada}
             onChange={(e) => setEntrada(e.target.value)}
             placeholder="Digite o número..."
-            className="flex-1 p-2 border border-gray-300 rounded-md"
+            className="min-w-0 flex-1 rounded-md border border-gray-300 p-2"
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
           />
           <button
             onClick={handleSend}
-            className="bg-yellow-500 hover:bg-yellow-400 text-white px-3 rounded-md"
+            className="rounded-md bg-yellow-500 px-3 text-white hover:bg-yellow-400"
+            aria-label="Enviar mensagem"
           >
-            ➤
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="m22 2-7 20-4-9-9-4Z" />
+              <path d="M22 2 11 13" />
+            </svg>
           </button>
         </div>
       </div>

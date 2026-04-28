@@ -5,10 +5,8 @@ import Header from "../components/Header";
 import Chatbot from "../components/Chatbot";
 import backgroundImage from "../assets/images/background_teknisa_page.png";
 
-
 const PAGE_SIZE = 6;
 
-// Função utilitária para dividir os cursos em páginas
 const chunk = (arr, size) => {
   const result = [];
   for (let i = 0; i < arr.length; i += size) {
@@ -34,7 +32,7 @@ const Home = () => {
       .then((data) => {
         setCursos(data);
       })
-      .catch((err) => console.error(" Erro ao carregar cursos:", err));
+      .catch((err) => console.error("Erro ao carregar cursos:", err));
   }, []);
 
   const pages = chunk(cursos, PAGE_SIZE);
@@ -42,98 +40,113 @@ const Home = () => {
   const current = pages[page] ?? [];
 
   const handleCardClick = (id) => {
-    console.log("Clicou no curso:", id);
     navigate(`/video/${id}`);
   };
 
+  const goPreviousPage = () => {
+    if (total <= 1) return;
+    setPage((prev) => (prev > 0 ? prev - 1 : total - 1));
+  };
+
+  const goNextPage = () => {
+    if (total <= 1) return;
+    setPage((prev) => (prev < total - 1 ? prev + 1 : 0));
+  };
+
+  const renderArrow = (direction) => (
+    <svg
+      className="h-6 w-6 text-black"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      {direction === "left" ? <path d="M12 19l-7-7 7-7" /> : <path d="M12 5l7 7-7 7" />}
+    </svg>
+  );
+
   return (
-    <main className="bg-[#FAF9F7] flex flex-col min-h-screen pt-[70px] font-sans">
-      {/* Cabeçalho */}
+    <main className="flex min-h-screen flex-col overflow-x-hidden bg-[#FAF9F7] pt-[118px] font-sans lg:pt-[70px]">
       <Header username={username} />
 
-      {/* Conteúdo principal */}
-      <section className="relative flex flex-col justify-center items-center flex-1"
-      style={{ 
-              backgroundImage: `url(${backgroundImage})`,
-              backgroundRepeat: "no-repeat",
-              backgroundPosition: "bottom",
-              backgroundSize: "100% 40%",
-       }}
+      <section
+        className="relative flex flex-1 flex-col items-center justify-center py-6 sm:py-8"
+        style={{
+          backgroundImage: `url(${backgroundImage})`,
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "bottom",
+          backgroundSize: "100% 35%",
+        }}
       >
-      <div className="w-full max-w-[1150px] px-6 flex flex-col justify-between h-full pt-10">
-       <Outlet />
+        <div className="flex h-full w-full max-w-[1150px] flex-col px-4 sm:px-6 lg:px-8">
+          <Outlet />
 
-          {/* Grid de cards e navegação */}
-          <div className="relative w-full flex items-center justify-center mt-1">
-            {/* Seta esquerda */}
+          <div className="relative mt-1 flex w-full items-center justify-center">
             <button
-              onClick={() => setPage((prev) => (prev > 0 ? prev - 1 : total - 1))}
+              onClick={goPreviousPage}
               disabled={total <= 1}
-              className="w-12 h-12 flex items-center justify-center bg-transparent mx-2"
+              className="mx-2 hidden h-12 w-12 items-center justify-center rounded-full bg-white/40 transition hover:bg-white disabled:opacity-40 md:flex"
               aria-label="Página anterior"
             >
-              <svg
-                className="w-6 h-6 text-black"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M12 19l-7-7 7-7" />
-              </svg>
+              {renderArrow("left")}
             </button>
 
-            {/* Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <div className="grid w-full max-w-sm grid-cols-1 justify-items-center gap-4 sm:max-w-2xl sm:grid-cols-2 md:max-w-4xl md:grid-cols-3 md:gap-6">
               {current.map((curso) => (
-                <div key={curso.id} className="flex justify-center">
+                <div key={curso.id} className="flex w-full justify-center">
                   <CarouselCard
                     id={curso.id}
                     title={curso.titulo}
                     icon={curso.icon_url}
                     onClick={() => handleCardClick(curso.id)}
-                    className="h-[180px]"
                   />
                 </div>
               ))}
             </div>
 
-            {/* Seta direita */}
             <button
-              onClick={() => setPage((prev) => (prev < total - 1 ? prev + 1 : 0))}
+              onClick={goNextPage}
               disabled={total <= 1}
-              className="w-12 h-12 flex items-center justify-center bg-transparent mx-2"
+              className="mx-2 hidden h-12 w-12 items-center justify-center rounded-full bg-white/40 transition hover:bg-white disabled:opacity-40 md:flex"
               aria-label="Próxima página"
             >
-              <svg
-                className="w-6 h-6 text-black"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M12 5l7 7-7 7" />
-              </svg>
+              {renderArrow("right")}
             </button>
           </div>
 
-          {/* Paginação */}
+          {total > 1 && (
+            <div className="mt-5 flex items-center justify-center gap-4 md:hidden">
+              <button
+                onClick={goPreviousPage}
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow"
+                aria-label="Página anterior"
+              >
+                {renderArrow("left")}
+              </button>
+              <button
+                onClick={goNextPage}
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow"
+                aria-label="Próxima página"
+              >
+                {renderArrow("right")}
+              </button>
+            </div>
+          )}
+
           {total > 0 && (
-            <div className="w-full h-[100px] flex items-center justify-center">
-              <div className="paginacao-container space-x-2">
+            <div className="flex min-h-[88px] w-full items-center justify-center py-4">
+              <div className="flex flex-wrap items-center justify-center gap-2">
                 {Array.from({ length: total }).map((_, i) => (
                   <button
                     key={i}
                     onClick={() => setPage(i)}
                     aria-label={`Ir para página ${i + 1}`}
-                    className={`w-10 h-10 text-center flex items-center justify-center rounded-md font-medium
-                      ${
-                        page === i
-                          ? "bg-yellow-500 text-white border-yellow-500 shadow-md"
-                          : "bg-white text-gray-600 border-gray-300 hover:bg-gray-200"
-                      }`}
+                    className={`flex h-10 w-10 items-center justify-center rounded-md text-center font-medium ${
+                      page === i
+                        ? "bg-yellow-500 text-white shadow-md"
+                        : "bg-white text-gray-600 hover:bg-gray-200"
+                    }`}
                   >
                     {i + 1}
                   </button>
@@ -144,7 +157,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Chatbot */}
       <Chatbot />
     </main>
   );

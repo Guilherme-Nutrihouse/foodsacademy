@@ -18,6 +18,12 @@
     height: 100%;
     margin: 0;
     padding: 0;
+    overflow-x: hidden;
+  }
+
+  img,
+  video {
+    max-width: 100%;
   }
 }
 
@@ -42,7 +48,7 @@
 
 .Carousel{
     margin-top: 6rem;
-    width: 75%;
+    width: min(100%, 75rem);
     
 }
 

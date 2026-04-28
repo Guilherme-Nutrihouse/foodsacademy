@@ -2,35 +2,37 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import "../index.css";
 
-const CarouselCard = ({ id, title, icon, onClick }) => {
+const CarouselCard = ({
+  id,
+  title,
+  icon,
+  icon_url,
+  caminho_icon,
+  onClick,
+  className = "",
+}) => {
   const navigate = useNavigate();
+  const imageSrc = icon_url || caminho_icon || icon || "/img/default-course-icon.png";
 
   const handleClick = () => {
     if (onClick) onClick();
     else navigate(`/video/${id}`);
   };
 
-return (
+  return (
     <button
       onClick={handleClick}
-      className="flex flex-row items-center justify-start 
-    bg-[linear-gradient(135deg,_#B95758,_#e14d3a)]   
-    text-white shadow-xl font-poppins text-lg rounded-2xl 
-    w-72 h-44 sm:w-80 sm:h-40 p-8 mx-2 transition-transform 
-    hover:scale-105 hover:shadow-2xl duration-200"
->
-      {/* Ícone do curso */}
+      className={`flex min-h-[10rem] w-full max-w-xs items-center justify-start rounded-lg bg-[linear-gradient(135deg,_#B95758,_#e14d3a)] p-5 text-left font-poppins text-white shadow-xl transition duration-200 hover:-translate-y-1 hover:shadow-2xl sm:min-h-[11rem] sm:p-6 ${className}`}
+    >
       <img
-        src={icon || "/img/default-course-icon.png"}
+        src={imageSrc}
         alt={title}
-        className="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-lg mr-4"
-
+        className="mr-4 h-14 w-14 shrink-0 object-contain drop-shadow-lg sm:h-20 sm:w-20"
       />
 
-      {/* Título */}
-      <h1 className="font-semibold text-base sm:text-lg leading-snug flex-1">
+      <h2 className="min-w-0 flex-1 break-words text-sm font-semibold leading-snug sm:text-lg">
         {title}
-      </h1>
+      </h2>
     </button>
   );
 };

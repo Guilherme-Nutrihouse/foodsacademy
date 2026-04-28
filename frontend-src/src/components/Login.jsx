@@ -31,14 +31,13 @@ const Login = () => {
       if (response.ok) {
         localStorage.setItem("username", data.username);
         navigate("/home");
-      } else {
-        //  Verifica se o backend retornou mensagem específica
-      if (
+      } else if (
         data.message?.toLowerCase().includes("senha") ||
         data.message?.toLowerCase().includes("password")
       ) {
         setError("Senha incorreta");
       } else if (
+        data.message?.toLowerCase().includes("usuario") ||
         data.message?.toLowerCase().includes("usuário") ||
         data.message?.toLowerCase().includes("user")
       ) {
@@ -46,7 +45,6 @@ const Login = () => {
       } else {
         setError("Falha na autenticação");
       }
-    }
     } catch (err) {
       setError("Erro ao conectar ao servidor");
     } finally {
@@ -55,38 +53,32 @@ const Login = () => {
   };
 
   return (
-    <div className="relative flex items-center justify-center min-h-screen bg-[#FAF9F7] overflow-hidden px-4">
-      {/* Onda superior esquerda */}
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#FAF9F7] px-4 py-8">
       <img
         src={OndaTop}
-        alt="Onda superior"
-        className="absolute top-0 left-0 w-auto h-[30%] max-w-[50%] object-contain z-0"
+        alt=""
+        className="pointer-events-none absolute left-0 top-0 z-0 h-[22%] max-w-[70%] object-contain sm:h-[30%] sm:max-w-[50%]"
       />
 
-      {/* Onda inferior direita */}
       <img
         src={OndaBottom}
-        alt="Onda inferior"
-        className="absolute bottom-0 right-0 w-auto h-[30%] max-w-[50%] object-contain z-0"
+        alt=""
+        className="pointer-events-none absolute bottom-0 right-0 z-0 h-[22%] max-w-[70%] object-contain sm:h-[30%] sm:max-w-[50%]"
       />
 
-      {/* Box de login */}
-      <div className="relative z-10 flex flex-col items-center 
-        w-full max-w-[360px]
-        bg-[linear-gradient(135deg,_#B95758,_#e14d3a)]
-        p-4 md:p-4 rounded-2xl shadow-1g text-center">
+      <section className="relative z-10 flex w-full max-w-sm flex-col items-center rounded-lg bg-[linear-gradient(135deg,_#B95758,_#e14d3a)] p-5 text-center shadow-lg sm:p-6">
         <img
           src={Logo}
           alt="Logo NutriHouse"
-          className="w-[200px] mb-[-20px]"
+          className="mb-[-16px] w-44 sm:w-[200px]"
         />
 
-        <h2 className="text-white text-2xl font-semibold mt-1">Bem-vindo</h2>
-        <p className="text-white text-sm mb-4">Acesse com seu usuário:</p>
+        <h1 className="mt-1 text-2xl font-semibold text-white">Bem-vindo</h1>
+        <p className="mb-4 text-sm text-white">Acesse com seu usuário:</p>
 
-        <form onSubmit={handleLogin} className="w-full flex flex-col gap-4">
+        <form onSubmit={handleLogin} className="flex w-full flex-col gap-4">
           <div className="text-center">
-            <label htmlFor="usuario" className="text-white font-medium block mb-1">
+            <label htmlFor="usuario" className="mb-1 block font-medium text-white">
               Usuário:
             </label>
             <input
@@ -95,13 +87,13 @@ const Login = () => {
               value={userDN}
               onChange={(e) => setUserDN(e.target.value)}
               placeholder="Digite seu usuário"
-              className="w-[265px] p-1 rounded-full border-none outline-none focus:ring-2 focus:ring-yellow-300"
+              className="w-full max-w-[265px] rounded-full border-none p-2 outline-none focus:ring-2 focus:ring-yellow-300"
               required
             />
           </div>
 
           <div className="text-center">
-            <label htmlFor="senha" className="text-white font-medium block mb-1">
+            <label htmlFor="senha" className="mb-1 block font-medium text-white">
               Senha:
             </label>
             <input
@@ -110,7 +102,7 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Digite sua senha"
-              className="w-[265px] p-1 rounded-full border-none outline-none focus:ring-2 focus:ring-yellow-300"
+              className="w-full max-w-[265px] rounded-full border-none p-2 outline-none focus:ring-2 focus:ring-yellow-300"
               required
             />
           </div>
@@ -118,7 +110,7 @@ const Login = () => {
           <button
             type="submit"
             disabled={loading}
-            className="mt-2 py-2 w-40 mx-auto bg-white text-[#0c0b0b] font-bold rounded-full transition-all hover:bg-gray-300 disabled:opacity-80"
+            className="mx-auto mt-2 w-full max-w-40 rounded-full bg-white py-2 font-bold text-[#0c0b0b] transition-all hover:bg-gray-300 disabled:opacity-80"
           >
             {loading ? "Entrando..." : "Entrar"}
           </button>
@@ -128,18 +120,18 @@ const Login = () => {
           href="https://app.milvus.com.br/"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-white text-sm mt-4 hover:underline"
+          className="mt-4 text-sm text-white hover:underline"
         >
           Esqueceu a senha?
         </a>
 
         {error && (
-          <p className="text-red-200 text-sm mt-3 bg-red-600/20 px-3 py-2 rounded-lg">
+          <p className="mt-3 rounded-lg bg-red-600/20 px-3 py-2 text-sm text-red-100">
             {error}
           </p>
         )}
-      </div>
-    </div>
+      </section>
+    </main>
   );
 };
 

@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.abf460ee.css",
-    "main.js": "/static/js/main.027786e1.js",
+    "main.css": "/static/css/main.7dccdc77.css",
+    "main.js": "/static/js/main.709f5292.js",
     "static/media/doll2.png": "/static/media/doll2.6448e8bcf799fefeba0d.png",
     "static/media/logo_branca.png": "/static/media/logo_branca.195216e853f2d49dac0b.png",
     "static/media/background_teknisa_page.png": "/static/media/background_teknisa_page.f69da5bd8babf63132d1.png",
@@ -13,11 +13,11 @@
     "static/media/background_onda3.jpg": "/static/media/background_onda3.1946a8502efa3d47fb4d.jpg",
     "static/media/background_onda1.jpg": "/static/media/background_onda1.67cf247a7e8338f4f8b3.jpg",
     "index.html": "/index.html",
-    "main.abf460ee.css.map": "/static/css/main.abf460ee.css.map",
-    "main.027786e1.js.map": "/static/js/main.027786e1.js.map"
+    "main.7dccdc77.css.map": "/static/css/main.7dccdc77.css.map",
+    "main.709f5292.js.map": "/static/js/main.709f5292.js.map"
   },
   "entrypoints": [
-    "static/css/main.abf460ee.css",
-    "static/js/main.027786e1.js"
+    "static/css/main.7dccdc77.css",
+    "static/js/main.709f5292.js"
   ]
 }

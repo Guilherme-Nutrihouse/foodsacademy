@@ -5,39 +5,36 @@ import Linkedin from "../assets/images/linkedin.png";
 
 const Footer = () => {
   return (
-    <footer className="bg-[#80B5B4] border-t w-full py-6">
-      <div className="grid md:grid-cols-3 gap-16 text-gray-700 w-full justify-items-center px-4">
-        {/* Coluna 1 - Logo e direitos */}
+    <footer className="w-full border-t bg-[#80B5B4] py-6">
+      <div className="mx-auto grid w-full max-w-screen-xl gap-8 px-4 text-center text-gray-700 sm:px-6 md:grid-cols-3 md:text-left lg:px-8">
         <div className="flex flex-col items-center md:items-start">
-          <img src={Logo} alt="NutriHouse Logo" className="w-24 mb-5" />
+          <img src={Logo} alt="NutriHouse Logo" className="mb-4 w-24" />
           <span className="text-sm">
-            © {new Date().getFullYear()} NutriHouse. Todos os direitos reservados.
+            &copy; {new Date().getFullYear()} NutriHouse. Todos os direitos reservados.
           </span>
         </div>
 
-        {/* Coluna 2 - Contato */}
         <div>
-          <h4 className="font-bold mb-3">Contato</h4>
-          <p className="text-sm">Email: suporte@nutrihouse.com</p>
+          <h2 className="mb-3 font-bold">Contato</h2>
+          <p className="break-words text-sm">Email: suporte@nutrihouse.com</p>
         </div>
 
-        {/* Coluna 3 - Redes sociais */}
-        <div>
-          <h4 className="font-bold mb-3">Redes sociais</h4>
+        <div className="flex flex-col items-center md:items-start">
+          <h2 className="mb-3 font-bold">Redes sociais</h2>
           <div className="flex gap-4">
             <a
               href="https://www.instagram.com/nutrihousequalidade/"
               target="_blank"
               rel="noopener noreferrer"
             >
-              <img src={Instagram} alt="Instagram" className="w-8 h-8" />
+              <img src={Instagram} alt="Instagram" className="h-8 w-8" />
             </a>
             <a
               href="https://www.linkedin.com/company/nutrihouse/posts/?feedView=all"
               target="_blank"
               rel="noopener noreferrer"
             >
-              <img src={Linkedin} alt="LinkedIn" className="w-8 h-8" />
+              <img src={Linkedin} alt="LinkedIn" className="h-8 w-8" />
             </a>
           </div>
         </div>
