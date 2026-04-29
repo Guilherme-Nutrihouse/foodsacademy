@@ -39,7 +39,16 @@ const Header = ({ username: usernameProp, search: controlledSearch, setSearch })
     return () => clearTimeout(timeoutId);
   }, [isAccountOpen]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch {
+      // Mesmo se a API falhar, a interface local deve sair da conta.
+    }
+
     localStorage.removeItem("username");
     navigate("/");
   };

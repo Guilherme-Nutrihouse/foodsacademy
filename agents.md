@@ -127,6 +127,7 @@ This project follows well-known and trusted patterns:
 - Follow existing patterns in the codebase
 - Extend features instead of rewriting
 - Write code that is easy to maintain
+- Add comments explaining every change made
 
 ---
 

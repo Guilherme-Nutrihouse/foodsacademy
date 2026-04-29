@@ -21,6 +21,8 @@ const app = express();
 // Middlewares globais: removem exposicao desnecessaria, aplicam headers,
 // liberam CORS conforme ambiente e limitam o tamanho do JSON recebido.
 app.disable('x-powered-by');
+// Permite detectar HTTPS original quando o backend roda atras do IIS/proxy.
+app.set('trust proxy', 1);
 app.use(securityHeaders);
 app.use(cors(buildCorsOptions()));
 app.use(express.json({ limit: process.env.JSON_LIMIT || '100kb' }));

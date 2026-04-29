@@ -2,6 +2,11 @@ const express = require('express');
 const ldap = require('ldapjs');
 
 const { logError, logInfo, logWarn } = require('../security');
+const {
+  clearRememberSessionCookie,
+  getRememberedUsername,
+  setRememberSessionCookie,
+} = require('../services/rememberSessionService');
 
 const router = express.Router();
 const LDAP_URL = process.env.LDAP_URL;
@@ -14,6 +19,24 @@ if (!LDAP_URL) {
 // Health check simples usado para confirmar que a API esta respondendo.
 router.get('/authenticate', (req, res) => {
   res.status(200).json({ ok: true, service: 'foodsacademy-api' });
+});
+
+// Restaura acesso lembrado somente quando o cookie assinado pelo backend e valido.
+router.get('/remember-session', (req, res) => {
+  const username = getRememberedUsername(req);
+
+  if (!username) {
+    return res.status(401).json({ remembered: false });
+  }
+
+  logInfo('Sessao lembrada validada', { username });
+  return res.status(200).json({ remembered: true, username });
+});
+
+// Limpa o cookie HttpOnly no encerramento da sessao.
+router.post('/logout', (req, res) => {
+  clearRememberSessionCookie(req, res);
+  res.status(200).json({ ok: true });
 });
 
 // Fecha a conexao LDAP apos cada tentativa para evitar conexoes penduradas.
@@ -69,7 +92,7 @@ const authenticateWithDN = (userDN, password, callback) => {
 
 // Recebe credenciais, valida formato minimo e delega a autenticacao ao LDAP.
 router.post('/authenticate', (req, res) => {
-  const { userDN, password } = req.body || {};
+  const { userDN, password, rememberLogin } = req.body || {};
 
   if (
     typeof userDN !== 'string' ||
@@ -88,6 +111,13 @@ router.post('/authenticate', (req, res) => {
     if (isAuthenticated) {
       // Retorna apenas o usuario derivado do DN, sem devolver senha ou detalhes LDAP.
       const username = normalizedUserDN.split('@')[0];
+
+      // O cookie lembrado autentica proximos acessos sem guardar a senha LDAP.
+      if (rememberLogin === true) {
+        setRememberSessionCookie(req, res, username);
+      } else {
+        clearRememberSessionCookie(req, res);
+      }
 
       logInfo('Usuario autenticado', { username });
       res.json({ message: 'Autentica\u00e7\u00e3o bem-sucedida', username });
