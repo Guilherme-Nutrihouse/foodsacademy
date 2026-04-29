@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, Outlet } from "react-router-dom";
 import CarouselCard from "../components/CarouselCard";
 import Header from "../components/Header";
@@ -15,10 +15,18 @@ const chunk = (arr, size) => {
   return result;
 };
 
+const normalizeSearchText = (value = "") =>
+  value
+    .toString()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
 const Home = () => {
   const [username, setUsername] = useState("Usuário");
   const [page, setPage] = useState(0);
   const [cursos, setCursos] = useState([]);
+  const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,9 +43,28 @@ const Home = () => {
       .catch((err) => console.error("Erro ao carregar cursos:", err));
   }, []);
 
-  const pages = chunk(cursos, PAGE_SIZE);
+  const cursosFiltrados = useMemo(() => {
+    const q = normalizeSearchText(search.trim());
+    if (!q) return cursos;
+
+    return cursos.filter((curso) =>
+      normalizeSearchText(curso.titulo || "").includes(q)
+    );
+  }, [cursos, search]);
+
+  useEffect(() => {
+    setPage(0);
+  }, [search]);
+
+  const pages = chunk(cursosFiltrados, PAGE_SIZE);
   const total = pages.length;
   const current = pages[page] ?? [];
+
+  useEffect(() => {
+    if (page > 0 && page >= total) {
+      setPage(Math.max(total - 1, 0));
+    }
+  }, [page, total]);
 
   const handleCardClick = (id) => {
     navigate(`/video/${id}`);
@@ -68,7 +95,7 @@ const Home = () => {
 
   return (
     <main className="flex min-h-screen flex-col overflow-x-hidden bg-[#FAF9F7] pt-[118px] font-sans lg:pt-[70px]">
-      <Header username={username} />
+      <Header username={username} search={search} setSearch={setSearch} />
 
       <section
         className="relative flex flex-1 flex-col items-center justify-center py-6 sm:py-8"
@@ -103,6 +130,14 @@ const Home = () => {
                   />
                 </div>
               ))}
+
+              {cursosFiltrados.length === 0 && (
+                <p className="col-span-full rounded-lg bg-white/80 px-4 py-3 text-center text-gray-600 shadow-sm">
+                  {search
+                    ? `Nenhum curso encontrado para "${search}".`
+                    : "Nenhum curso cadastrado no momento."}
+                </p>
+              )}
             </div>
 
             <button

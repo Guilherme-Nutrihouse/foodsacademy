@@ -2,6 +2,13 @@ import React, { useEffect, useMemo, useState } from "react";
 import Header from "../components/Header";
 import CarouselCard from "../components/CarouselCard";
 
+const normalizeSearchText = (value = "") =>
+  value
+    .toString()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
 const Cards = () => {
   const [username, setUsername] = useState("");
   const [cursos, setCursos] = useState([]);
@@ -42,9 +49,11 @@ const Cards = () => {
   }, []);
 
   const cursosFiltrados = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const q = normalizeSearchText(search.trim());
     if (!q) return cursos;
-    return cursos.filter((curso) => (curso.titulo || "").toLowerCase().includes(q));
+    return cursos.filter((curso) =>
+      normalizeSearchText(curso.titulo || "").includes(q)
+    );
   }, [cursos, search]);
 
   if (loading) {
