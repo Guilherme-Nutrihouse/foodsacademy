@@ -3,7 +3,7 @@ backend/logs/
 backend/*.log
 backend/node_modules/
 frontend-src/node_modules/
-agends.md
+agents.md
 docs
 frontend
 videos_cursos
