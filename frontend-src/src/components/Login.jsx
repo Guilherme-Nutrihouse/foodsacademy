@@ -11,7 +11,7 @@ const REMEMBERED_USER_KEY = "rememberedLoginUser";
 
 // Define atributos do cookie sem quebrar ambientes HTTP internos.
 const getRememberedUserCookieOptions = () => ({
-  expires: 365,
+  expires: 2,
   sameSite: "lax",
   secure: window.location.protocol === "https:",
 });

@@ -67,7 +67,7 @@ const Cards = () => {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center overflow-x-hidden bg-white pt-[118px] lg:pt-[70px]">
+    <main className="flex min-h-screen flex-col items-center overflow-x-hidden bg-white pt-[128px] sm:pt-[132px] lg:pt-[72px]">
       <Header username={username} search={search} setSearch={setSearch} />
 
       <section className="flex w-full flex-col items-center px-4 py-8 sm:px-6 lg:px-8">

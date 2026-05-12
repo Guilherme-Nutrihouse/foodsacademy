@@ -94,7 +94,7 @@ const Home = () => {
   );
 
   return (
-    <main className="flex min-h-screen flex-col overflow-x-hidden bg-[#FAF9F7] pt-[118px] font-sans lg:pt-[70px]">
+    <main className="flex min-h-screen flex-col overflow-x-hidden bg-[#FAF9F7] pt-[128px] font-sans sm:pt-[132px] lg:pt-[72px]">
       <Header username={username} search={search} setSearch={setSearch} />
 
       <section

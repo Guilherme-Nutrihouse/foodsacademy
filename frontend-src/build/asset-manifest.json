@@ -1,23 +1,23 @@
 {
   "files": {
-    "main.css": "/static/css/main.d282e397.css",
-    "main.js": "/static/js/main.808a2100.js",
+    "main.css": "/static/css/main.ba16c73c.css",
+    "main.js": "/static/js/main.6930e635.js",
     "static/media/doll2.png": "/static/media/doll2.6448e8bcf799fefeba0d.png",
+    "static/media/logo_novo.svg": "/static/media/logo_novo.8fd777b3e5cecdf913d237174f5b2262.svg",
+    "static/media/foodsacademy_logo.svg": "/static/media/foodsacademy_logo.475c5a47eb0da05902426ad94549533e.svg",
     "static/media/logo_branca.png": "/static/media/logo_branca.195216e853f2d49dac0b.png",
     "static/media/background_teknisa_page.png": "/static/media/background_teknisa_page.f69da5bd8babf63132d1.png",
-    "static/media/logo_preta.png": "/static/media/logo_preta.9101dff4bc63594cb904.png",
-    "static/media/user.png": "/static/media/user.64517c6eacccd5c38956.png",
     "static/media/background_onda4.jpg": "/static/media/background_onda4.dd4b552edbee2cbcae14.jpg",
     "static/media/background_onda2.jpg": "/static/media/background_onda2.85a9b55638b4f8e16919.jpg",
     "static/media/chatbot2.png": "/static/media/chatbot2.c4a86488072f15317564.png",
     "static/media/background_onda3.jpg": "/static/media/background_onda3.1946a8502efa3d47fb4d.jpg",
     "static/media/background_onda1.jpg": "/static/media/background_onda1.67cf247a7e8338f4f8b3.jpg",
     "index.html": "/index.html",
-    "main.d282e397.css.map": "/static/css/main.d282e397.css.map",
-    "main.808a2100.js.map": "/static/js/main.808a2100.js.map"
+    "main.ba16c73c.css.map": "/static/css/main.ba16c73c.css.map",
+    "main.6930e635.js.map": "/static/js/main.6930e635.js.map"
   },
   "entrypoints": [
-    "static/css/main.d282e397.css",
-    "static/js/main.808a2100.js"
+    "static/css/main.ba16c73c.css",
+    "static/js/main.6930e635.js"
   ]
 }

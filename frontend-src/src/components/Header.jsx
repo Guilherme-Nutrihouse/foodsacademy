@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import SearchBar from "./Searchbar.jsx";
-import Logo from "../assets/logos/logo_preta.png";
-import User from "../assets/images/user.png";
+import Logo from "../assets/logos/foodsacademy_logo.svg";
+import User from "../assets/logos/logo_novo.svg";
 import ExitIcon from "../assets/images/exit2.png";
 
 const Header = ({ username: usernameProp, search: controlledSearch, setSearch }) => {
@@ -64,8 +64,16 @@ const Header = ({ username: usernameProp, search: controlledSearch, setSearch })
     <header className="fixed inset-x-0 top-0 z-40 border-b border-black/5 bg-[#FAF9F7]/95 shadow-sm backdrop-blur">
       <div className="mx-auto flex max-w-screen-xl flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between lg:px-6 lg:py-2">
         <div className="flex items-center justify-between gap-3">
-          <Link to="/home" className="flex shrink-0 items-center" aria-label="Foods Academy">
-            <img src={Logo} alt="NutriHouse" className="h-9 w-auto sm:h-10" />
+          <Link
+            to="/home"
+            className="flex h-11 w-36 shrink-0 items-center overflow-hidden sm:h-12 sm:w-40 lg:w-44"
+            aria-label="Foods Academy"
+          >
+            <img
+              src={Logo}
+              alt="Foods Academy"
+              className="h-full top: -0.125rem object-contain w-full object-cover object-center"
+            />
           </Link>
 
           <button
@@ -136,14 +144,20 @@ const Header = ({ username: usernameProp, search: controlledSearch, setSearch })
           <div className="relative flex min-w-0 items-center justify-between gap-3 lg:justify-start">
             <button
               type="button"
-              className="flex min-w-0 items-center gap-2 text-left text-black"
+              className="group flex min-w-0 items-center gap-2 text-left text-sm font-medium text-black transition hover:text-yellow-700"
               onClick={() => setIsAccountOpen((prev) => !prev)}
               aria-expanded={isAccountOpen}
             >
               <span className="min-w-0 truncate">
-                Olá, <strong>{username}</strong>
+                Olá, <strong className="font-semibold">{username}</strong>
               </span>
-              <img src={User} alt="" className="h-5 w-5 shrink-0" />
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-black/10 bg-white shadow-sm transition group-hover:border-yellow-500/70 sm:h-9 sm:w-9">
+                <img
+                  src={User}
+                  alt=""
+                  className="h-full w-full object-cover object-center"
+                />
+              </span>
             </button>
 
             {isAccountOpen && (

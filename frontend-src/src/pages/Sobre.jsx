@@ -33,7 +33,7 @@ const Sobre = () => {
 
       <Header username={username} />
 
-      <div className="relative z-10 mx-auto w-full max-w-5xl flex-1 px-4 pt-[118px] sm:px-6 lg:px-8 lg:pt-24">
+      <div className="relative z-10 mx-auto w-full max-w-5xl flex-1 px-4 pt-[128px] sm:px-6 sm:pt-[132px] lg:px-8 lg:pt-[72px]">
         <section className="my-8 grid items-center gap-6 md:my-12 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:gap-8">
           <div className="flex justify-center md:justify-start">
             <img
