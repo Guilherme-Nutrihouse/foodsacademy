@@ -66,13 +66,13 @@ const Header = ({ username: usernameProp, search: controlledSearch, setSearch })
         <div className="flex items-center justify-between gap-3">
           <Link
             to="/home"
-            className="flex h-11 w-36 shrink-0 items-center overflow-hidden sm:h-12 sm:w-40 lg:w-44"
+            className="flex h-11 w-36 shrink-0 items-center overflow-hidden sm:h-[3.25rem] sm:w-40 lg:w-44"
             aria-label="Foods Academy"
           >
             <img
               src={Logo}
               alt="Foods Academy"
-              className="h-full top: -0.125rem object-contain w-full object-cover object-center"
+              className="h-full w-full object-cover object-[center_45%]"
             />
           </Link>
 

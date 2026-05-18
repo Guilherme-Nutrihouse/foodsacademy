@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.ba16c73c.css",
-    "main.js": "/static/js/main.6930e635.js",
+    "main.css": "/static/css/main.67b0a9fe.css",
+    "main.js": "/static/js/main.02d78a97.js",
     "static/media/doll2.png": "/static/media/doll2.6448e8bcf799fefeba0d.png",
     "static/media/logo_novo.svg": "/static/media/logo_novo.8fd777b3e5cecdf913d237174f5b2262.svg",
     "static/media/foodsacademy_logo.svg": "/static/media/foodsacademy_logo.475c5a47eb0da05902426ad94549533e.svg",
@@ -13,11 +13,11 @@
     "static/media/background_onda3.jpg": "/static/media/background_onda3.1946a8502efa3d47fb4d.jpg",
     "static/media/background_onda1.jpg": "/static/media/background_onda1.67cf247a7e8338f4f8b3.jpg",
     "index.html": "/index.html",
-    "main.ba16c73c.css.map": "/static/css/main.ba16c73c.css.map",
-    "main.6930e635.js.map": "/static/js/main.6930e635.js.map"
+    "main.67b0a9fe.css.map": "/static/css/main.67b0a9fe.css.map",
+    "main.02d78a97.js.map": "/static/js/main.02d78a97.js.map"
   },
   "entrypoints": [
-    "static/css/main.ba16c73c.css",
-    "static/js/main.6930e635.js"
+    "static/css/main.67b0a9fe.css",
+    "static/js/main.02d78a97.js"
   ]
 }

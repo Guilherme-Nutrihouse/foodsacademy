@@ -261,7 +261,7 @@ const Login = () => {
         <img
           src={Logo}
           alt="Logo NutriHouse"
-          className="mb-[-16px] w-44 sm:w-[200px]"
+          className="mb-[-16px] w-36 sm:w-[144px]"
         />
 
         <h1 className="mt-1 text-2xl font-semibold text-white">Bem-vindo</h1>
