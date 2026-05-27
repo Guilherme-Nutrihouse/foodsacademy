@@ -4,6 +4,11 @@ import CarouselCard from "../components/CarouselCard";
 import Header from "../components/Header";
 import Chatbot from "../components/Chatbot";
 import backgroundImage from "../assets/images/background_teknisa_page.png";
+import {
+  TEKNISA_COLLECTION,
+  courseStartsWithPrefix,
+  normalizeCourseText,
+} from "../data/courseCollections";
 
 const PAGE_SIZE = 6;
 
@@ -14,13 +19,6 @@ const chunk = (arr, size) => {
   }
   return result;
 };
-
-const normalizeSearchText = (value = "") =>
-  value
-    .toString()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
 
 const Home = () => {
   const [username, setUsername] = useState("Usuário");
@@ -43,14 +41,38 @@ const Home = () => {
       .catch((err) => console.error("Erro ao carregar cursos:", err));
   }, []);
 
-  const cursosFiltrados = useMemo(() => {
-    const q = normalizeSearchText(search.trim());
-    if (!q) return cursos;
-
-    return cursos.filter((curso) =>
-      normalizeSearchText(curso.titulo || "").includes(q)
+  const cards = useMemo(() => {
+    const cursosTeknisa = cursos.filter((curso) =>
+      courseStartsWithPrefix(curso, TEKNISA_COLLECTION.prefix)
     );
-  }, [cursos, search]);
+    const cursosSemTeknisa = cursos.filter(
+      (curso) => !courseStartsWithPrefix(curso, TEKNISA_COLLECTION.prefix)
+    );
+
+    return [
+      {
+        id: `collection-${TEKNISA_COLLECTION.id}`,
+        titulo: TEKNISA_COLLECTION.title,
+        icon_url: TEKNISA_COLLECTION.iconUrl,
+        searchText: [
+          TEKNISA_COLLECTION.title,
+          TEKNISA_COLLECTION.prefix,
+          ...cursosTeknisa.map((curso) => curso.titulo),
+        ].join(" "),
+        type: "collection",
+      },
+      ...cursosSemTeknisa.map((curso) => ({ ...curso, type: "course" })),
+    ];
+  }, [cursos]);
+
+  const cursosFiltrados = useMemo(() => {
+    const q = normalizeCourseText(search.trim());
+    if (!q) return cards;
+
+    return cards.filter((curso) =>
+      normalizeCourseText(curso.searchText || curso.titulo || "").includes(q)
+    );
+  }, [cards, search]);
 
   useEffect(() => {
     setPage(0);
@@ -68,6 +90,10 @@ const Home = () => {
 
   const handleCardClick = (id) => {
     navigate(`/video/${id}`);
+  };
+
+  const handleCollectionClick = () => {
+    navigate(TEKNISA_COLLECTION.route);
   };
 
   const goPreviousPage = () => {
@@ -125,8 +151,17 @@ const Home = () => {
                   <CarouselCard
                     id={curso.id}
                     title={curso.titulo}
-                    icon={curso.icon_url}
-                    onClick={() => handleCardClick(curso.id)}
+                    icon_url={curso.icon_url}
+                    onClick={() =>
+                      curso.type === "collection"
+                        ? handleCollectionClick()
+                        : handleCardClick(curso.id)
+                    }
+                    className={
+                      curso.type === "collection"
+                        ? "bg-[linear-gradient(135deg,_#263238,_#e14d3a)]"
+                        : ""
+                    }
                   />
                 </div>
               ))}

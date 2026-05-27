@@ -113,6 +113,9 @@ const VideoPage = () => {
               key={selectedVideo.url}
               className="h-full w-full object-contain"
               controls
+              controlsList="nodownload"
+              disablePictureInPicture
+              onContextMenu={(e) => e.preventDefault()}
               onEnded={handleVideoEnded}
             >
               <source src={selectedVideo.url} type="video/mp4" />

@@ -1,19 +1,20 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import Header from "../components/Header";
 import CarouselCard from "../components/CarouselCard";
-
-const normalizeSearchText = (value = "") =>
-  value
-    .toString()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
+import {
+  courseStartsWithPrefix,
+  getCourseCollection,
+  normalizeCourseText,
+} from "../data/courseCollections";
 
 const Cards = () => {
   const [username, setUsername] = useState("");
   const [cursos, setCursos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [searchParams] = useSearchParams();
+  const activeCollection = getCourseCollection(searchParams.get("collection"));
 
   useEffect(() => {
     const storedUsername = localStorage.getItem("username");
@@ -48,13 +49,21 @@ const Cards = () => {
     carregarCursos();
   }, []);
 
-  const cursosFiltrados = useMemo(() => {
-    const q = normalizeSearchText(search.trim());
-    if (!q) return cursos;
+  const cursosBase = useMemo(() => {
+    if (!activeCollection) return cursos;
+
     return cursos.filter((curso) =>
-      normalizeSearchText(curso.titulo || "").includes(q)
+      courseStartsWithPrefix(curso, activeCollection.prefix)
     );
-  }, [cursos, search]);
+  }, [activeCollection, cursos]);
+
+  const cursosFiltrados = useMemo(() => {
+    const q = normalizeCourseText(search.trim());
+    if (!q) return cursosBase;
+    return cursosBase.filter((curso) =>
+      normalizeCourseText(curso.titulo || "").includes(q)
+    );
+  }, [cursosBase, search]);
 
   if (loading) {
     return (
@@ -72,11 +81,11 @@ const Cards = () => {
 
       <section className="flex w-full flex-col items-center px-4 py-8 sm:px-6 lg:px-8">
         <h1 className="text-center text-2xl font-semibold text-gray-800">
-          Todos os Cursos
+          {activeCollection ? activeCollection.title : "Todos os Cursos"}
         </h1>
 
         <div className="mt-2 text-center text-sm text-gray-500">
-          Mostrando {cursosFiltrados.length} de {cursos.length}
+          Mostrando {cursosFiltrados.length} de {cursosBase.length}
         </div>
 
         <div className="mt-6 grid w-full max-w-screen-xl grid-cols-1 justify-items-center gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -97,6 +106,8 @@ const Cards = () => {
             <p className="col-span-full mt-6 text-center text-gray-500">
               {search
                 ? `Nenhum curso encontrado para "${search}".`
+                : activeCollection
+                ? `Nenhum curso encontrado em ${activeCollection.title}.`
                 : "Nenhum curso cadastrado no momento."}
             </p>
           )}
