@@ -1,6 +1,5 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import "../index.css";
 
 const CarouselCard = ({
   id,
@@ -8,16 +7,13 @@ const CarouselCard = ({
   icon,
   icon_url,
   caminho_icon,
-  onClick,
   className = "",
+  onClick,
 }) => {
   const navigate = useNavigate();
   const imageSrc = icon_url || caminho_icon || icon || "/img/default-course-icon.png";
 
-  const handleClick = () => {
-    if (onClick) onClick();
-    else navigate(`/video/${id}`);
-  };
+  const handleClick = () => (onClick ? onClick() : navigate(`/video/${id}`));
 
   return (
     <button

@@ -1,34 +1,39 @@
 const path = require('path');
+const sql = require('mssql');
+
 require('dotenv').config({ path: path.join(__dirname, '.env'), quiet: true });
 
-//////////////////// CONEXAO SQL SERVER ////////////////////
-// O backend nao guarda credenciais no codigo; elas devem vir do .env/IIS.
 const requiredEnv = ['DB_USER', 'DB_PASS', 'DB_SERVER', 'DB_NAME'];
 const missingEnv = requiredEnv.filter((name) => !process.env[name]);
 
-if (missingEnv.length > 0) {
+if (missingEnv.length) {
   throw new Error(`Variaveis de ambiente obrigatorias ausentes: ${missingEnv.join(', ')}`);
 }
 
-// Normaliza flags do .env para booleanos aceitos pela biblioteca mssql.
-const toBoolean = (value, defaultValue) => {
-  if (value === undefined) {
-    return defaultValue;
-  }
+const bool = (value, fallback) =>
+  value === undefined
+    ? fallback
+    : ['true', '1', 'yes', 'sim'].includes(String(value).trim().toLowerCase());
 
-  return ['true', '1', 'yes', 'sim'].includes(String(value).trim().toLowerCase());
-};
-
-// Configuracao unica usada pelas rotas que precisam consultar o SQL Server.
 const dbConfig = {
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   server: process.env.DB_SERVER,
   database: process.env.DB_NAME,
   options: {
-    encrypt: toBoolean(process.env.DB_ENCRYPT, false),
-    trustServerCertificate: toBoolean(process.env.DB_TRUST_CERT, true),
+    encrypt: bool(process.env.DB_ENCRYPT, false),
+    trustServerCertificate: bool(process.env.DB_TRUST_CERT, true),
   },
 };
 
-module.exports = { dbConfig };
+const query = async (text, params = {}) => {
+  const request = (await sql.connect(dbConfig)).request();
+
+  Object.entries(params).forEach(([name, [type, value]]) =>
+    request.input(name, type, value)
+  );
+
+  return (await request.query(text)).recordset;
+};
+
+module.exports = { dbConfig, query, sql };

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import ChatbotIcon from "../assets/images/chatbot2.png";
 import chatbotData from "../data/chatbotData.js";
+import Icon from "./Icon";
 
 function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,26 +22,17 @@ function Chatbot() {
     if (!entrada) return;
 
     const op = chatbotData[contexto][entrada];
-    setMensagens((prev) => [...prev, { de: "user", texto: entrada }]);
-
-    if (op) {
-      if (op.resposta) {
-        setMensagens((prev) => [...prev, { de: "bot", texto: op.resposta }]);
-        setMensagens((prev) => [
-          ...prev,
+    const userMessage = { de: "user", texto: entrada };
+    const nextContext = op?.resposta ? "Menu Principal" : op?.next || contexto;
+    const botMessages = op?.resposta
+      ? [
+          { de: "bot", texto: op.resposta },
           { de: "bot", texto: gerarMenu("Menu Principal") },
-        ]);
-        setContexto("Menu Principal");
-      } else if (op.next) {
-        setMensagens((prev) => [...prev, { de: "bot", texto: gerarMenu(op.next) }]);
-        setContexto(op.next);
-      }
-    } else {
-      setMensagens((prev) => [
-        ...prev,
-        { de: "bot", texto: "Opção inválida, tente novamente." },
-      ]);
-    }
+        ]
+      : [{ de: "bot", texto: op?.next ? gerarMenu(op.next) : "Opção inválida, tente novamente." }];
+
+    setMensagens((prev) => [...prev, userMessage, ...botMessages]);
+    setContexto(nextContext);
 
     setEntrada("");
   };
@@ -97,19 +89,7 @@ function Chatbot() {
             className="rounded-md bg-yellow-500 px-3 text-white hover:bg-yellow-400"
             aria-label="Enviar mensagem"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="m22 2-7 20-4-9-9-4Z" />
-              <path d="M22 2 11 13" />
-            </svg>
+            <Icon name="send" />
           </button>
         </div>
       </div>

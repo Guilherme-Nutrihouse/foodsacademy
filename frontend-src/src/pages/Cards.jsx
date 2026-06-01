@@ -1,15 +1,16 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import Header from "../components/Header";
 import CarouselCard from "../components/CarouselCard";
+import Header from "../components/Header";
 import {
   courseStartsWithPrefix,
   getCourseCollection,
   normalizeCourseText,
 } from "../data/courseCollections";
+import { fetchJson, getStoredUsername, withCourseIcon } from "../utils/app";
 
 const Cards = () => {
-  const [username, setUsername] = useState("");
+  const [username] = useState(getStoredUsername);
   const [cursos, setCursos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -17,53 +18,19 @@ const Cards = () => {
   const activeCollection = getCourseCollection(searchParams.get("collection"));
 
   useEffect(() => {
-    const storedUsername = localStorage.getItem("username");
-    setUsername(
-      storedUsername && storedUsername !== "undefined" ? storedUsername : "Usuário"
-    );
+    fetchJson("/api/cursos")
+      .then((data) => setCursos(data.map(withCourseIcon)))
+      .catch((error) => console.error("Erro ao carregar cursos:", error))
+      .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => {
-    async function carregarCursos() {
-      try {
-        const res = await fetch("/api/cursos");
-        const data = await res.json();
-
-        const cursosComIcones = data.map((curso) => ({
-          id: curso.id,
-          titulo: curso.titulo,
-          caminho: curso.caminho,
-          icon: curso.icon,
-          caminho_icon: curso.caminho_icon,
-          icon_url: curso.icon ? `/icons_cursos/${curso.icon}` : null,
-        }));
-
-        setCursos(cursosComIcones);
-      } catch (error) {
-        console.error("Erro ao carregar cursos:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    carregarCursos();
-  }, []);
-
-  const cursosBase = useMemo(() => {
-    if (!activeCollection) return cursos;
-
-    return cursos.filter((curso) =>
-      courseStartsWithPrefix(curso, activeCollection.prefix)
-    );
-  }, [activeCollection, cursos]);
-
-  const cursosFiltrados = useMemo(() => {
-    const q = normalizeCourseText(search.trim());
-    if (!q) return cursosBase;
-    return cursosBase.filter((curso) =>
-      normalizeCourseText(curso.titulo || "").includes(q)
-    );
-  }, [cursosBase, search]);
+  const q = normalizeCourseText(search.trim());
+  const cursosBase = activeCollection
+    ? cursos.filter((curso) => courseStartsWithPrefix(curso, activeCollection.prefix))
+    : cursos;
+  const cursosFiltrados = q
+    ? cursosBase.filter((curso) => normalizeCourseText(curso.titulo || "").includes(q))
+    : cursosBase;
 
   if (loading) {
     return (
@@ -91,18 +58,11 @@ const Cards = () => {
         <div className="mt-6 grid w-full max-w-screen-xl grid-cols-1 justify-items-center gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {cursosFiltrados.map((curso) => (
             <div key={curso.id} className="flex h-full w-full justify-center">
-              <CarouselCard
-                id={curso.id}
-                title={curso.titulo}
-                caminho={curso.caminho}
-                icon={curso.icon}
-                caminho_icon={curso.caminho_icon}
-                icon_url={curso.icon_url}
-              />
+              <CarouselCard {...curso} title={curso.titulo} />
             </div>
           ))}
 
-          {cursosFiltrados.length === 0 && (
+          {!cursosFiltrados.length && (
             <p className="col-span-full mt-6 text-center text-gray-500">
               {search
                 ? `Nenhum curso encontrado para "${search}".`

@@ -3,26 +3,16 @@ const crypto = require('crypto');
 const { logWarn } = require('../security');
 
 const COOKIE_NAME = 'foodsacademy_remember_session';
-const DEFAULT_MAX_AGE_DAYS = 30;
-
+const DEFAULT_DAYS = 30;
 let runtimeSecret;
 
-// Mantem o token compacto e seguro para transporte em cookie.
-const encodeBase64Url = (value) =>
-  Buffer.from(value).toString('base64url');
+const env = (name) => String(process.env[name] || '').trim();
+const b64 = (value) => Buffer.from(value).toString('base64url');
+const fromB64 = (value) => Buffer.from(value, 'base64url').toString('utf8');
 
-// Volta o payload assinado para texto antes de validar os campos.
-const decodeBase64Url = (value) =>
-  Buffer.from(value, 'base64url').toString('utf8');
-
-// Usa segredo configurado quando existir; sem isso, tokens expiram ao reiniciar.
 const getSessionSecret = () => {
-  const configuredSecret =
-    process.env.REMEMBER_SESSION_SECRET || process.env.SESSION_SECRET;
-
-  if (configuredSecret && configuredSecret.trim().length >= 16) {
-    return configuredSecret.trim();
-  }
+  const secret = env('REMEMBER_SESSION_SECRET') || env('SESSION_SECRET');
+  if (secret.length >= 16) return secret;
 
   if (!runtimeSecret) {
     runtimeSecret = crypto.randomBytes(32).toString('hex');
@@ -34,47 +24,21 @@ const getSessionSecret = () => {
   return runtimeSecret;
 };
 
-// Permite ajustar a duracao sem mudar codigo.
 const getMaxAgeMs = () => {
-  const configuredDays = Number(process.env.REMEMBER_SESSION_DAYS);
-  const days =
-    Number.isFinite(configuredDays) && configuredDays > 0
-      ? configuredDays
-      : DEFAULT_MAX_AGE_DAYS;
-
-  return days * 24 * 60 * 60 * 1000;
+  const days = Number(process.env.REMEMBER_SESSION_DAYS);
+  return (Number.isFinite(days) && days > 0 ? days : DEFAULT_DAYS) * 86400000;
 };
 
-// Detecta HTTPS mesmo quando o Node esta atras de IIS/proxy reverso.
-const isHttpsRequest = (req) => {
-  const forwardedProto = String(req.headers['x-forwarded-proto'] || '')
+const isSecureCookieEnabled = (req) => {
+  const configured = env('REMEMBER_SESSION_COOKIE_SECURE').toLowerCase();
+  if (configured) return configured === 'true';
+
+  const proto = String(req.headers['x-forwarded-proto'] || '')
     .split(',')[0]
     .trim()
     .toLowerCase();
 
-  return req.secure || forwardedProto === 'https';
-};
-
-// Secure pode ser configurado, mas por padrao acompanha a requisicao recebida.
-const isSecureCookieEnabled = (req) => {
-  const configuredValue = String(
-    process.env.REMEMBER_SESSION_COOKIE_SECURE || ''
-  ).toLowerCase();
-
-  if (configuredValue === 'true') {
-    return true;
-  }
-
-  if (configuredValue === 'false') {
-    return false;
-  }
-
-  return isHttpsRequest(req);
-};
-
-const getCookieDomain = () => {
-  const domain = String(process.env.REMEMBER_SESSION_COOKIE_DOMAIN || '').trim();
-  return domain || undefined;
+  return req.secure || proto === 'https';
 };
 
 const getCookieOptions = (req, maxAge) => ({
@@ -82,99 +46,59 @@ const getCookieOptions = (req, maxAge) => ({
   sameSite: 'lax',
   secure: isSecureCookieEnabled(req),
   path: '/',
-  ...(getCookieDomain() ? { domain: getCookieDomain() } : {}),
-  ...(maxAge ? { maxAge } : {}),
+  ...(env('REMEMBER_SESSION_COOKIE_DOMAIN') && { domain: env('REMEMBER_SESSION_COOKIE_DOMAIN') }),
+  ...(maxAge && { maxAge }),
 });
 
-const signPayload = (payload) =>
-  crypto
-    .createHmac('sha256', getSessionSecret())
-    .update(payload)
-    .digest('base64url');
+const sign = (payload) =>
+  crypto.createHmac('sha256', getSessionSecret()).update(payload).digest('base64url');
 
-const signaturesMatch = (expected, received) => {
-  const expectedBuffer = Buffer.from(expected);
-  const receivedBuffer = Buffer.from(received || '');
-
-  return (
-    expectedBuffer.length === receivedBuffer.length &&
-    crypto.timingSafeEqual(expectedBuffer, receivedBuffer)
-  );
+const signaturesMatch = (expected, received = '') => {
+  const left = Buffer.from(expected);
+  const right = Buffer.from(received);
+  return left.length === right.length && crypto.timingSafeEqual(left, right);
 };
 
-// O token contem apenas usuario e expiracao; nunca senha LDAP.
 const createRememberSessionToken = (username) => {
-  const payload = encodeBase64Url(
-    JSON.stringify({
-      username,
-      exp: Date.now() + getMaxAgeMs(),
-    })
-  );
-  const signature = signPayload(payload);
-
-  return `${payload}.${signature}`;
+  const payload = b64(JSON.stringify({ username, exp: Date.now() + getMaxAgeMs() }));
+  return `${payload}.${sign(payload)}`;
 };
 
 const verifyRememberSessionToken = (token) => {
-  if (!token || typeof token !== 'string') {
-    return null;
-  }
-
-  const [payload, signature] = token.split('.');
-
-  if (!payload || !signature || !signaturesMatch(signPayload(payload), signature)) {
-    return null;
-  }
+  const [payload, signature] = String(token || '').split('.');
+  if (!payload || !signature || !signaturesMatch(sign(payload), signature)) return null;
 
   try {
-    const data = JSON.parse(decodeBase64Url(payload));
-
-    if (
-      typeof data.username !== 'string' ||
-      data.username.trim().length === 0 ||
-      typeof data.exp !== 'number' ||
-      data.exp <= Date.now()
-    ) {
-      return null;
-    }
-
-    return data.username.trim();
+    const { username, exp } = JSON.parse(fromB64(payload));
+    return typeof username === 'string' &&
+      username.trim() &&
+      typeof exp === 'number' &&
+      exp > Date.now()
+      ? username.trim()
+      : null;
   } catch {
     return null;
   }
 };
 
-// Le cookies sem adicionar dependencia nova ao backend.
-const getCookieValue = (req, cookieName) => {
-  const cookieHeader = req.headers.cookie;
-
-  if (!cookieHeader) {
-    return '';
-  }
-
-  const cookie = cookieHeader
+const getCookieValue = (req, name) => {
+  const cookie = String(req.headers.cookie || '')
     .split(';')
     .map((item) => item.trim())
-    .find((item) => item.startsWith(`${cookieName}=`));
+    .find((item) => item.startsWith(`${name}=`));
 
-  if (!cookie) {
-    return '';
-  }
-
-  return decodeURIComponent(cookie.slice(cookieName.length + 1));
+  return cookie ? decodeURIComponent(cookie.slice(name.length + 1)) : '';
 };
 
-const setRememberSessionCookie = (req, res, username) => {
+const setRememberSessionCookie = (req, res, username) =>
   res.cookie(
     COOKIE_NAME,
     createRememberSessionToken(username),
     getCookieOptions(req, getMaxAgeMs())
   );
-};
 
-const clearRememberSessionCookie = (req, res) => {
+const clearRememberSessionCookie = (req, res) =>
   res.clearCookie(COOKIE_NAME, getCookieOptions(req));
-};
 
 const getRememberedUsername = (req) =>
   verifyRememberSessionToken(getCookieValue(req, COOKIE_NAME));

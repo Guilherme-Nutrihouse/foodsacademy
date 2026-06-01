@@ -1,34 +1,35 @@
 const express = require('express');
-const sql = require('mssql');
 
-const { dbConfig } = require('../db');
-const { logError } = require('../security');
+const { query, sql } = require('../db');
+const asyncRoute = require('./asyncRoute');
 
 const router = express.Router();
-
-// Lista os cursos com os campos consumidos pelo frontend.
-router.get('/cursos', async (req, res) => {
-  try {
-    const pool = await sql.connect(dbConfig);
-    const result = await pool
-      .request()
-      .query('SELECT id, titulo, caminho, icon, caminho_icon FROM cursos');
-
-    // Converte o retorno do SQL em um contrato de API estavel.
-    const cursos = result.recordset.map((curso) => ({
-      id: curso.id,
-      titulo: curso.titulo,
-      caminho: curso.caminho,
-      icon: curso.icon,
-      caminho_icon: curso.caminho_icon,
-      icon_url: curso.icon ? `/icons_cursos/${curso.icon}` : null,
-    }));
-
-    res.json(cursos);
-  } catch (err) {
-    logError('Erro ao buscar cursos', err);
-    res.status(500).json({ error: 'Erro ao buscar cursos' });
-  }
+const cursoFields = 'id, titulo, caminho, icon, caminho_icon';
+const withIcon = (curso) => ({
+  ...curso,
+  icon_url: curso.icon ? `/icons_cursos/${curso.icon}` : null,
 });
+
+router.get(
+  '/cursos',
+  asyncRoute('Erro ao buscar cursos', async (req, res) => {
+    const cursos = await query(`SELECT ${cursoFields} FROM cursos`);
+    res.json(cursos.map(withIcon));
+  })
+);
+
+router.get(
+  '/materiais/:id',
+  asyncRoute('Erro ao buscar materiais', async (req, res) => {
+    const materiais = await query(
+      `SELECT id, id_curso, titulo, descricao, caminho, tipo
+       FROM material_apoio
+       WHERE id_curso = @id`,
+      { id: [sql.Int, req.params.id] }
+    );
+
+    res.json(materiais);
+  })
+);
 
 module.exports = router;

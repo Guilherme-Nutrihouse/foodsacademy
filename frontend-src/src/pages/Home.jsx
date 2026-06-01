@@ -1,53 +1,36 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate, Outlet } from "react-router-dom";
-import CarouselCard from "../components/CarouselCard";
-import Header from "../components/Header";
-import Chatbot from "../components/Chatbot";
+import { Outlet, useNavigate } from "react-router-dom";
 import backgroundImage from "../assets/images/background_teknisa_page.png";
+import CarouselCard from "../components/CarouselCard";
+import Chatbot from "../components/Chatbot";
+import Header from "../components/Header";
+import Icon from "../components/Icon";
 import {
   TEKNISA_COLLECTION,
   courseStartsWithPrefix,
   normalizeCourseText,
 } from "../data/courseCollections";
+import { fetchJson, getStoredUsername } from "../utils/app";
 
 const PAGE_SIZE = 6;
 
-const chunk = (arr, size) => {
-  const result = [];
-  for (let i = 0; i < arr.length; i += size) {
-    result.push(arr.slice(i, i + size));
-  }
-  return result;
-};
-
 const Home = () => {
-  const [username, setUsername] = useState("Usuário");
+  const [username] = useState(getStoredUsername);
   const [page, setPage] = useState(0);
   const [cursos, setCursos] = useState([]);
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    const stored = localStorage.getItem("username");
-    if (stored && stored !== "undefined") setUsername(stored);
-  }, []);
-
-  useEffect(() => {
-    fetch("/api/cursos")
-      .then((res) => res.json())
-      .then((data) => {
-        setCursos(data);
-      })
+    fetchJson("/api/cursos")
+      .then(setCursos)
       .catch((err) => console.error("Erro ao carregar cursos:", err));
   }, []);
 
   const cards = useMemo(() => {
-    const cursosTeknisa = cursos.filter((curso) =>
-      courseStartsWithPrefix(curso, TEKNISA_COLLECTION.prefix)
-    );
-    const cursosSemTeknisa = cursos.filter(
-      (curso) => !courseStartsWithPrefix(curso, TEKNISA_COLLECTION.prefix)
-    );
+    const isTeknisa = (curso) =>
+      courseStartsWithPrefix(curso, TEKNISA_COLLECTION.prefix);
+    const cursosTeknisa = cursos.filter(isTeknisa);
 
     return [
       {
@@ -61,63 +44,36 @@ const Home = () => {
         ].join(" "),
         type: "collection",
       },
-      ...cursosSemTeknisa.map((curso) => ({ ...curso, type: "course" })),
+      ...cursos
+        .filter((curso) => !isTeknisa(curso))
+        .map((curso) => ({ ...curso, type: "course" })),
     ];
   }, [cursos]);
 
   const cursosFiltrados = useMemo(() => {
     const q = normalizeCourseText(search.trim());
-    if (!q) return cards;
-
-    return cards.filter((curso) =>
-      normalizeCourseText(curso.searchText || curso.titulo || "").includes(q)
-    );
+    return q
+      ? cards.filter((curso) =>
+          normalizeCourseText(curso.searchText || curso.titulo || "").includes(q)
+        )
+      : cards;
   }, [cards, search]);
 
-  useEffect(() => {
-    setPage(0);
-  }, [search]);
+  const total = Math.ceil(cursosFiltrados.length / PAGE_SIZE);
+  const current = cursosFiltrados.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
-  const pages = chunk(cursosFiltrados, PAGE_SIZE);
-  const total = pages.length;
-  const current = pages[page] ?? [];
+  useEffect(() => setPage(0), [search]);
 
   useEffect(() => {
-    if (page > 0 && page >= total) {
-      setPage(Math.max(total - 1, 0));
-    }
+    if (page >= total) setPage(Math.max(total - 1, 0));
   }, [page, total]);
 
-  const handleCardClick = (id) => {
-    navigate(`/video/${id}`);
+  const goPage = (step) => {
+    if (total > 1) setPage((value) => (value + step + total) % total);
   };
 
-  const handleCollectionClick = () => {
-    navigate(TEKNISA_COLLECTION.route);
-  };
-
-  const goPreviousPage = () => {
-    if (total <= 1) return;
-    setPage((prev) => (prev > 0 ? prev - 1 : total - 1));
-  };
-
-  const goNextPage = () => {
-    if (total <= 1) return;
-    setPage((prev) => (prev < total - 1 ? prev + 1 : 0));
-  };
-
-  const renderArrow = (direction) => (
-    <svg
-      className="h-6 w-6 text-black"
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth="2"
-    >
-      {direction === "left" ? <path d="M12 19l-7-7 7-7" /> : <path d="M12 5l7 7-7 7" />}
-    </svg>
-  );
+  const openCurso = (curso) =>
+    navigate(curso.type === "collection" ? TEKNISA_COLLECTION.route : `/video/${curso.id}`);
 
   return (
     <main className="flex min-h-screen flex-col overflow-x-hidden bg-[#FAF9F7] pt-[128px] font-sans sm:pt-[132px] lg:pt-[72px]">
@@ -127,8 +83,8 @@ const Home = () => {
         className="relative flex flex-1 flex-col items-center justify-center py-6 sm:py-8"
         style={{
           backgroundImage: `url(${backgroundImage})`,
-          backgroundRepeat: "no-repeat",
           backgroundPosition: "bottom",
+          backgroundRepeat: "no-repeat",
           backgroundSize: "100% 35%",
         }}
       >
@@ -137,12 +93,12 @@ const Home = () => {
 
           <div className="relative mt-1 flex w-full items-center justify-center">
             <button
-              onClick={goPreviousPage}
+              onClick={() => goPage(-1)}
               disabled={total <= 1}
               className="mx-2 hidden h-12 w-12 items-center justify-center rounded-full bg-white/40 transition hover:bg-white disabled:opacity-40 md:flex"
               aria-label="Página anterior"
             >
-              {renderArrow("left")}
+              <Icon name="left" className="h-6 w-6 text-black" />
             </button>
 
             <div className="grid w-full max-w-sm grid-cols-1 justify-items-center gap-4 sm:max-w-2xl sm:grid-cols-2 md:max-w-4xl md:grid-cols-3 md:gap-6">
@@ -152,11 +108,7 @@ const Home = () => {
                     id={curso.id}
                     title={curso.titulo}
                     icon_url={curso.icon_url}
-                    onClick={() =>
-                      curso.type === "collection"
-                        ? handleCollectionClick()
-                        : handleCardClick(curso.id)
-                    }
+                    onClick={() => openCurso(curso)}
                     className={
                       curso.type === "collection"
                         ? "bg-[linear-gradient(135deg,_#263238,_#e14d3a)]"
@@ -166,7 +118,7 @@ const Home = () => {
                 </div>
               ))}
 
-              {cursosFiltrados.length === 0 && (
+              {!cursosFiltrados.length && (
                 <p className="col-span-full rounded-lg bg-white/80 px-4 py-3 text-center text-gray-600 shadow-sm">
                   {search
                     ? `Nenhum curso encontrado para "${search}".`
@@ -176,38 +128,37 @@ const Home = () => {
             </div>
 
             <button
-              onClick={goNextPage}
+              onClick={() => goPage(1)}
               disabled={total <= 1}
               className="mx-2 hidden h-12 w-12 items-center justify-center rounded-full bg-white/40 transition hover:bg-white disabled:opacity-40 md:flex"
               aria-label="Próxima página"
             >
-              {renderArrow("right")}
+              <Icon name="right" className="h-6 w-6 text-black" />
             </button>
           </div>
 
           {total > 1 && (
             <div className="mt-5 flex items-center justify-center gap-4 md:hidden">
-              <button
-                onClick={goPreviousPage}
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow"
-                aria-label="Página anterior"
-              >
-                {renderArrow("left")}
-              </button>
-              <button
-                onClick={goNextPage}
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow"
-                aria-label="Próxima página"
-              >
-                {renderArrow("right")}
-              </button>
+              {[
+                ["Página anterior", -1, "left"],
+                ["Próxima página", 1, "right"],
+              ].map(([label, step, icon]) => (
+                <button
+                  key={label}
+                  onClick={() => goPage(step)}
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow"
+                  aria-label={label}
+                >
+                  <Icon name={icon} className="h-6 w-6 text-black" />
+                </button>
+              ))}
             </div>
           )}
 
           {total > 0 && (
             <div className="flex min-h-[88px] w-full items-center justify-center py-4">
               <div className="flex flex-wrap items-center justify-center gap-2">
-                {Array.from({ length: total }).map((_, i) => (
+                {Array.from({ length: total }, (_, i) => (
                   <button
                     key={i}
                     onClick={() => setPage(i)}

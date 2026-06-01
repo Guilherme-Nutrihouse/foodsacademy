@@ -1,24 +1,26 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-
 @layer base {
   * {
-    font-family: 'Poppins', sans-serif;
     box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
   }
 
-  html, body, #root {
-    font-family: 'Poppins', sans-serif !important;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+  html,
+  body,
+  #root {
+    background-color: #faf9f7;
     height: 100%;
     margin: 0;
-    padding: 0;
     overflow-x: hidden;
+    padding: 0;
+    font-family: "Poppins", sans-serif !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   img,
@@ -27,65 +29,55 @@
   }
 }
 
-.paginacao-container { 
+.paginacao-container {
   display: flex;
+  align-items: center;
   justify-content: center;
-  align-items: center;      
-  height: 100%;        
+  height: 100%;
 }
 
 .sobre {
-  overflow-y: auto;
   height: auto;
-  scrollbar-width: thin;
+  overflow-y: auto;
   scrollbar-color: #6c5ce7 #f1f1f1;
-  
+  scrollbar-width: thin;
 }
 
 .code {
-  font-family:  'Poppins', sans-serif !important;
+  font-family: "Poppins", sans-serif !important;
 }
 
-.Carousel{
-    margin-top: 6rem;
-    width: min(100%, 75rem);
-    
+.Carousel {
+  width: min(100%, 75rem);
+  margin-top: 6rem;
 }
 
-.footer {
-  margin: 0 !important;
-  padding: 0 !important;
-  width: 100% !important;
-}
-
+.footer,
 .footer > div {
+  width: 100% !important;
   margin: 0 !important;
   padding: 0 !important;
-  width: 100% !important;
 }
 
 .login-page {
-  font-family: 'Arial', sans-serif;
-} 
+  font-family: "Arial", sans-serif;
+}
 
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px; 
+  width: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent !important;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
+.custom-scrollbar::-webkit-scrollbar-thumb,
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.25);
   border-radius: 20px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
-}
-
 .custom-scrollbar {
-  scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+  scrollbar-width: thin;
 }

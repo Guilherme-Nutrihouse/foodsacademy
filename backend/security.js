@@ -1,148 +1,85 @@
 const REDACTED = '[redacted]';
+const SENSITIVE = /(password|senha|pass|secret|token|authorization|cookie|session|credential|credencial)/i;
+const IDENTITY = /(user|usuario|username|userdn|dn|email|login)/i;
 
-// Chaves com estes nomes nunca devem aparecer completas nos logs.
-const SENSITIVE_KEY_PATTERN =
-  /(password|senha|pass|secret|token|authorization|cookie|session|credential|credencial)/i;
-const IDENTITY_KEY_PATTERN = /(user|usuario|username|userdn|dn|email|login)/i;
-
-// Mantem um pequeno prefixo para ajudar na auditoria sem expor o valor completo.
 const maskPart = (value) => {
   const text = String(value || '').trim();
-
-  if (!text) {
-    return REDACTED;
-  }
-
-  if (text.length <= 2) {
-    return `${text.charAt(0)}***`;
-  }
-
-  return `${text.slice(0, 2)}***`;
+  if (!text) return REDACTED;
+  return `${text.length <= 2 ? text.charAt(0) : text.slice(0, 2)}***`;
 };
 
-// Mascara usuarios/e-mails antes de registrar qualquer evento de autenticacao.
-const maskIdentity = (identity) => {
-  const text = String(identity || '').trim();
+const maskIdentity = (value) => {
+  const text = String(value || '').trim();
+  if (!text) return REDACTED;
 
-  if (!text) {
-    return REDACTED;
-  }
-
-  const [localPart] = text.split('@');
-  return text.includes('@') ? `${maskPart(localPart)}@***` : maskPart(text);
+  const [user] = text.split('@');
+  return text.includes('@') ? `${maskPart(user)}@***` : maskPart(text);
 };
 
-// Remove dados sensiveis de mensagens textuais vindas de erros ou bibliotecas.
-const redactSensitiveText = (value) => {
-  if (value === undefined || value === null) {
-    return value;
-  }
-
-  return String(value)
-    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+/gi, (match) => maskIdentity(match))
+const redactText = (value) =>
+  String(value)
+    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+/gi, maskIdentity)
     .replace(/Login failed for user '[^']*'/gi, "Login failed for user '[redacted]'")
     .replace(
       /(password|senha|secret|token|authorization|cookie)\s*[:=]\s*([^\s,;]+)/gi,
       '$1=[redacted]'
     );
-};
 
-// Percorre objetos/arrays recursivamente para sanitizar estruturas de log.
 const sanitizeLogData = (data) => {
-  if (data instanceof Error) {
-    return redactSensitiveText(data.message);
-  }
+  if (data === undefined || data === null) return data;
+  if (data instanceof Error) return redactText(data.message);
+  if (Array.isArray(data)) return data.map(sanitizeLogData);
+  if (typeof data === 'string') return redactText(data);
+  if (typeof data !== 'object') return data;
 
-  if (Array.isArray(data)) {
-    return data.map(sanitizeLogData);
-  }
-
-  if (data && typeof data === 'object') {
-    return Object.entries(data).reduce((safeData, [key, value]) => {
-      if (SENSITIVE_KEY_PATTERN.test(key)) {
-        safeData[key] = REDACTED;
-      } else if (IDENTITY_KEY_PATTERN.test(key)) {
-        safeData[key] = maskIdentity(value);
-      } else {
-        safeData[key] = sanitizeLogData(value);
-      }
-
-      return safeData;
-    }, {});
-  }
-
-  if (typeof data === 'string') {
-    return redactSensitiveText(data);
-  }
-
-  return data;
+  return Object.fromEntries(
+    Object.entries(data).map(([key, value]) => [
+      key,
+      SENSITIVE.test(key)
+        ? REDACTED
+        : IDENTITY.test(key)
+        ? maskIdentity(value)
+        : sanitizeLogData(value),
+    ])
+  );
 };
 
-// Wrappers de log garantem que todo detalhe passe pelo sanitizador.
-const logInfo = (message, details) => {
-  if (details === undefined) {
-    console.log(message);
-    return;
-  }
+const logger = (method) => (message, details) =>
+  details === undefined
+    ? console[method](message)
+    : console[method](message, sanitizeLogData(details));
 
-  console.log(message, sanitizeLogData(details));
-};
-
-const logWarn = (message, details) => {
-  if (details === undefined) {
-    console.warn(message);
-    return;
-  }
-
-  console.warn(message, sanitizeLogData(details));
-};
-
-const logError = (message, error) => {
-  if (error === undefined) {
-    console.error(message);
-    return;
-  }
-
-  console.error(message, sanitizeLogData(error));
-};
-
-// Permite restringir CORS por CORS_ORIGIN; sem configuracao mantem compatibilidade.
 const buildCorsOptions = () => {
-  const allowedOrigins = String(process.env.CORS_ORIGIN || '')
+  const allowed = String(process.env.CORS_ORIGIN || '')
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
 
-  if (allowedOrigins.length === 0) {
-    return { origin: true, credentials: true };
-  }
-
-  return {
-    credentials: true,
-    origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-        return;
+  return allowed.length
+    ? {
+        credentials: true,
+        origin: (origin, done) =>
+          !origin || allowed.includes(origin)
+            ? done(null, true)
+            : done(new Error('Origem nao permitida pelo CORS')),
       }
-
-      callback(new Error('Origem nao permitida pelo CORS'));
-    },
-  };
+    : { origin: true, credentials: true };
 };
 
-// Headers simples que reduzem exposicao de detalhes e cache de respostas da API.
 const securityHeaders = (req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('Referrer-Policy', 'no-referrer');
-  res.setHeader('Cache-Control', 'no-store');
+  [
+    ['X-Content-Type-Options', 'nosniff'],
+    ['Referrer-Policy', 'no-referrer'],
+    ['Cache-Control', 'no-store'],
+  ].forEach(([key, value]) => res.setHeader(key, value));
   next();
 };
 
 module.exports = {
   buildCorsOptions,
-  logError,
-  logInfo,
-  logWarn,
+  logError: logger('error'),
+  logInfo: logger('log'),
+  logWarn: logger('warn'),
   maskIdentity,
   securityHeaders,
 };

@@ -1,21 +1,24 @@
-import React, { useEffect, useState } from "react";
-import Header from "../components/Header";
-import Doll from "../assets/images/doll2.png";
+import React, { useState } from "react";
 import Book from "../assets/images/book.png";
 import Clock from "../assets/images/clock.png";
+import Doll from "../assets/images/doll2.png";
 import List from "../assets/images/list.png";
-import Play from "../assets/images/play-button.png";
 import Onda1 from "../assets/images/background_onda3.jpg";
 import Onda2 from "../assets/images/background_onda4.jpg";
+import Play from "../assets/images/play-button.png";
 import Footer from "../components/Footer.jsx";
+import Header from "../components/Header";
+import { getStoredUsername } from "../utils/app";
+
+const items = [
+  [List, "Cursos e treinamentos organizados"],
+  [Play, "Vídeos práticos e acessíveis"],
+  [Book, "Materiais de apoio digitais"],
+  [Clock, "Atualizações frequentes e novos módulos"],
+];
 
 const Sobre = () => {
-  const [username, setUsername] = useState("Usuário");
-
-  useEffect(() => {
-    const stored = localStorage.getItem("username");
-    if (stored && stored !== "undefined") setUsername(stored);
-  }, []);
+  const [username] = useState(getStoredUsername);
 
   return (
     <main className="relative flex min-h-screen flex-col overflow-x-hidden bg-[#FAF9F7]">
@@ -24,7 +27,6 @@ const Sobre = () => {
         alt=""
         className="pointer-events-none absolute right-0 top-0 z-0 w-36 sm:w-48 md:w-56"
       />
-
       <img
         src={Onda2}
         alt=""
@@ -74,30 +76,12 @@ const Sobre = () => {
             O QUE ENCONTRAR NA PLATAFORMA
           </h2>
           <div className="space-y-5 sm:space-y-6">
-            <div className="flex items-start gap-4">
-              <img src={List} alt="" className="h-10 w-10 shrink-0" />
-              <p className="text-sm text-gray-700 md:text-base">
-                Cursos e treinamentos organizados
-              </p>
-            </div>
-            <div className="flex items-start gap-4">
-              <img src={Play} alt="" className="h-10 w-10 shrink-0" />
-              <p className="text-sm text-gray-700 md:text-base">
-                Vídeos práticos e acessíveis
-              </p>
-            </div>
-            <div className="flex items-start gap-4">
-              <img src={Book} alt="" className="h-10 w-10 shrink-0" />
-              <p className="text-sm text-gray-700 md:text-base">
-                Materiais de apoio digitais
-              </p>
-            </div>
-            <div className="flex items-start gap-4">
-              <img src={Clock} alt="" className="h-10 w-10 shrink-0" />
-              <p className="text-sm text-gray-700 md:text-base">
-                Atualizações frequentes e novos módulos
-              </p>
-            </div>
+            {items.map(([icon, text]) => (
+              <div key={text} className="flex items-start gap-4">
+                <img src={icon} alt="" className="h-10 w-10 shrink-0" />
+                <p className="text-sm text-gray-700 md:text-base">{text}</p>
+              </div>
+            ))}
           </div>
         </section>
       </div>

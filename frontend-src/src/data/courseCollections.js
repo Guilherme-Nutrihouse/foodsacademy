@@ -13,11 +13,10 @@ export const TEKNISA_COLLECTION = {
   route: "/cards?collection=teknisa",
 };
 
-const COURSE_COLLECTIONS = {
-  [TEKNISA_COLLECTION.id]: TEKNISA_COLLECTION,
-};
-
-export const getCourseCollection = (id) => COURSE_COLLECTIONS[id] || null;
+export const getCourseCollection = (id) =>
+  id === TEKNISA_COLLECTION.id ? TEKNISA_COLLECTION : null;
 
 export const courseStartsWithPrefix = (course, prefix) =>
-  normalizeCourseText(course?.titulo || "").startsWith(normalizeCourseText(prefix));
+  normalizeCourseText(course?.titulo || "").startsWith(
+    normalizeCourseText(prefix)
+  );
