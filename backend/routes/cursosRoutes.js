@@ -1,14 +1,12 @@
 const express = require('express');
+const path = require('path'); // Necessario para montar URLs publicas dos videos locais.
 
-const { query, sql } = require('../db');
+const { query, sql } = require('../db'); // Necessario para usar parametros tipados no SQL Server.
 const asyncRoute = require('./asyncRoute');
 
 const router = express.Router();
 const cursoFields = 'id, titulo, caminho, icon, caminho_icon';
-const withIcon = (curso) => ({
-  ...curso,
-  icon_url: curso.icon ? `/icons_cursos/${curso.icon}` : null,
-});
+
 
 router.get(
   '/cursos',
@@ -18,18 +16,6 @@ router.get(
   })
 );
 
-router.get(
-  '/materiais/:id',
-  asyncRoute('Erro ao buscar materiais', async (req, res) => {
-    const materiais = await query(
-      `SELECT id, id_curso, titulo, descricao, caminho, tipo
-       FROM material_apoio
-       WHERE id_curso = @id`,
-      { id: [sql.Int, req.params.id] }
-    );
 
-    res.json(materiais);
-  })
-);
 
 module.exports = router;

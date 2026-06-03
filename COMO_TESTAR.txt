@@ -1,0 +1,93 @@
+🎯 COMO TESTAR O SISTEMA AGORA
+
+═══════════════════════════════════════════════════════════════
+
+OPÇÃO 1: TESTE DIRETO VIA POWERSHELL
+═════════════════════════════════════════════════════════════
+
+Copie e cole no PowerShell (já testado e funcionando):
+
+```powershell
+Invoke-RestMethod -Uri "http://localhost:5000/api/materiais/5" | ConvertTo-Json -Depth 10
+```
+
+Esperado: JSON com dados do material "Ebook Prompts de ChatGPT"
+
+═══════════════════════════════════════════════════════════════
+
+OPÇÃO 2: TESTE NO NAVEGADOR (QUANDO IIS ESTIVER RODANDO)
+═════════════════════════════════════════════════════════════
+
+1. Acesse: http://foodsacademy.com.br/test-materiais.html
+2. Clique em "Testar API de Materiais (Curso 5)"
+3. Verifique a resposta
+
+═══════════════════════════════════════════════════════════════
+
+OPÇÃO 3: ACESSE O APLICATIVO PRINCIPAL
+═════════════════════════════════════════════════════════════
+
+1. Acesse: http://foodsacademy.com.br
+2. Navegue até "Cursos" → "Introdução à IA" (Curso 5)
+3. Clique em "Materiais de Apoio"
+4. Deverá aparecer o card "Ebook Prompts de ChatGPT"
+5. Clique em "Baixar" para fazer download
+
+═══════════════════════════════════════════════════════════════
+
+O QUE FOI CORRIGIDO:
+═════════════════════════════════════════════════════════════
+
+✅ Caminho do PDF no banco de dados
+   - Antes: prompts.pdf
+   - Depois: videos_cursos/Introducao_IA/Materiais/prompts.pdf
+
+✅ Frontend compilado com melhorias
+   - Melhor tratamento de erros HTTP
+   - Logs melhorados
+   - Build atualizado
+
+✅ Backend confirmado funcionando
+   - API respondendo
+   - CORS ativo
+   - Banco de dados correto
+
+═══════════════════════════════════════════════════════════════
+
+ARQUIVOS CRIADOS/MODIFICADOS:
+═════════════════════════════════════════════════════════════
+
+✅ Z:\foodsacademy\frontend\test-materiais.html
+   → Arquivo de teste para diagnosticar problemas de API
+
+✅ Z:\foodsacademy\STATUS_FINAL.md
+   → Documento com status completo do projeto
+
+✅ Z:\foodsacademy\backend\routes\cursosRoutes.js
+   → Logs adicionados para debugging
+
+✅ Z:\foodsacademy\frontend-src\src\utils\app.js
+   → Validação HTTP status melhorada
+
+✅ Z:\foodsacademy\frontend-src\src\pages\MaterialPage.jsx
+   → Logs e tratamento de erros melhorados
+
+═══════════════════════════════════════════════════════════════
+
+PRÓXIMOS PASSOS:
+═════════════════════════════════════════════════════════════
+
+1. Inicie o IIS (se disponível)
+   → Comando: iisreset
+
+2. Acesse o navegador
+   → http://foodsacademy.com.br
+
+3. Teste o fluxo completo de materiais
+
+4. Se houver erro:
+   → Abra F12 (Developer Tools)
+   → Console tab
+   → Veja a mensagem de erro exata
+
+═══════════════════════════════════════════════════════════════
