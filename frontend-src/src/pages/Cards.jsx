@@ -26,10 +26,14 @@ const Cards = () => {
 
   const q = normalizeCourseText(search.trim());
   const cursosBase = activeCollection
-    ? cursos.filter((curso) => courseStartsWithPrefix(curso, activeCollection.prefix))
+    ? cursos.filter((curso) =>
+        courseStartsWithPrefix(curso, activeCollection.prefix),
+      )
     : cursos;
   const cursosFiltrados = q
-    ? cursosBase.filter((curso) => normalizeCourseText(curso.titulo || "").includes(q))
+    ? cursosBase.filter((curso) =>
+        normalizeCourseText(curso.titulo || "").includes(q),
+      )
     : cursosBase;
 
   if (loading) {
@@ -47,14 +51,6 @@ const Cards = () => {
       <Header username={username} search={search} setSearch={setSearch} />
 
       <section className="flex w-full flex-col items-center px-4 py-8 sm:px-6 lg:px-8">
-        <h1 className="text-center text-2xl font-semibold text-gray-800">
-          {activeCollection ? activeCollection.title : "Todos os Cursos"}
-        </h1>
-
-        <div className="mt-2 text-center text-sm text-gray-500">
-          Mostrando {cursosFiltrados.length} de {cursosBase.length}
-        </div>
-
         <div className="mt-6 grid w-full max-w-screen-xl grid-cols-1 justify-items-center gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {cursosFiltrados.map((curso) => (
             <div key={curso.id} className="flex h-full w-full justify-center">
@@ -62,13 +58,21 @@ const Cards = () => {
             </div>
           ))}
 
+          <h1 className="text-center text-2xl font-semibold text-gray-800">
+            {activeCollection ? activeCollection.title : "Todos os Cursos"}
+          </h1>
+
+          <div className="mt-2 text-center text-sm text-gray-500">
+            Mostrando {cursosFiltrados.length} de {cursosBase.length}
+          </div>
+
           {!cursosFiltrados.length && (
             <p className="col-span-full mt-6 text-center text-gray-500">
               {search
                 ? `Nenhum curso encontrado para "${search}".`
                 : activeCollection
-                ? `Nenhum curso encontrado em ${activeCollection.title}.`
-                : "Nenhum curso cadastrado no momento."}
+                  ? `Nenhum curso encontrado em ${activeCollection.title}.`
+                  : "Nenhum curso cadastrado no momento."}
             </p>
           )}
         </div>

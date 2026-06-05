@@ -1,11 +1,19 @@
 const express = require('express');
-const path = require('path'); // Necessario para montar URLs publicas dos videos locais.
+const path = require('path'); // Necessario para montar URLs publicas de arquivos locais.
 
-const { query, sql } = require('../db'); // Necessario para usar parametros tipados no SQL Server.
+const { query } = require('../db'); // Necessario para consultar o SQL Server.
 const asyncRoute = require('./asyncRoute');
 
 const router = express.Router();
 const cursoFields = 'id, titulo, caminho, icon, caminho_icon';
+
+// Monta a URL publica do icone sem expor caminhos internos do banco.
+const withIcon = (curso) => ({
+  ...curso,
+  icon_url: curso.icon
+    ? `/icons_cursos/${path.basename(String(curso.icon))}`
+    : curso.caminho_icon || null,
+});
 
 
 router.get(

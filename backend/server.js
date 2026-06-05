@@ -12,10 +12,35 @@ const routes = [
 ];
 
 const app = express();
+const staticFolders = [
+  {
+    route: '/videos_cursos',
+    folder: path.join(__dirname, '..', 'videos_cursos'),
+  },
+  {
+    route: '/icons_cursos',
+    folder: path.join(__dirname, '..', 'icons_cursos'),
+  },
+];
+
+// Permite cache curto dos arquivos estaticos sem prender atualizacoes por muito tempo.
+const setStaticHeaders = (res) => {
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+};
 
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
 app.use(securityHeaders, cors(buildCorsOptions()), express.json({ limit: process.env.JSON_LIMIT || '100kb' }));
+// Entrega videos e icones quando o IIS encaminha essas pastas ao Node.
+staticFolders.forEach(({ route, folder }) =>
+  app.use(
+    route,
+    express.static(folder, {
+      dotfiles: 'ignore',
+      setHeaders: setStaticHeaders,
+    })
+  )
+);
 routes.forEach((route) => app.use('/api', route));
 
 app.use((err, req, res, next) => {

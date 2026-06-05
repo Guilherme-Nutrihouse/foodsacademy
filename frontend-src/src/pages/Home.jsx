@@ -6,7 +6,7 @@ import Chatbot from "../components/Chatbot";
 import Header from "../components/Header";
 import Icon from "../components/Icon";
 import {
-  TEKNISA_COLLECTION,
+  COURSE_COLLECTIONS,
   courseStartsWithPrefix,
   normalizeCourseText,
 } from "../data/courseCollections";
@@ -28,25 +28,37 @@ const Home = () => {
   }, []);
 
   const cards = useMemo(() => {
-    const isTeknisa = (curso) =>
-      courseStartsWithPrefix(curso, TEKNISA_COLLECTION.prefix);
-    const cursosTeknisa = cursos.filter(isTeknisa);
+    // Agrupa cursos por prefixo para exibir filtros como cards de colecao.
+    const collectionCards = COURSE_COLLECTIONS.map((collection) => {
+      const cursosColecao = cursos.filter((curso) =>
+        courseStartsWithPrefix(curso, collection.prefix)
+      );
 
-    return [
-      {
-        id: `collection-${TEKNISA_COLLECTION.id}`,
-        titulo: TEKNISA_COLLECTION.title,
-        icon_url: TEKNISA_COLLECTION.iconUrl,
+      return {
+        id: `collection-${collection.id}`,
+        titulo: collection.title,
+        icon_url: collection.iconUrl,
         searchText: [
-          TEKNISA_COLLECTION.title,
-          TEKNISA_COLLECTION.prefix,
-          ...cursosTeknisa.map((curso) => curso.titulo),
+          collection.title,
+          collection.prefix,
+          ...cursosColecao.map((curso) => curso.titulo),
         ].join(" "),
         type: "collection",
-      },
-      ...cursos
-        .filter((curso) => !isTeknisa(curso))
-        .map((curso) => ({ ...curso, type: "course" })),
+        collection,
+      };
+    });
+
+    // Oculta cursos das colecoes na lista principal para manter o mesmo fluxo da Teknisa.
+    const cursosSemColecao = cursos.filter(
+      (curso) =>
+        !COURSE_COLLECTIONS.some((collection) =>
+          courseStartsWithPrefix(curso, collection.prefix)
+        )
+    );
+
+    return [
+      ...collectionCards,
+      ...cursosSemColecao.map((curso) => ({ ...curso, type: "course" })),
     ];
   }, [cursos]);
 
@@ -72,8 +84,11 @@ const Home = () => {
     if (total > 1) setPage((value) => (value + step + total) % total);
   };
 
+  // Usa a rota da colecao selecionada quando o card for um filtro.
   const openCurso = (curso) =>
-    navigate(curso.type === "collection" ? TEKNISA_COLLECTION.route : `/video/${curso.id}`);
+    navigate(
+      curso.type === "collection" ? curso.collection.route : `/video/${curso.id}`
+    );
 
   return (
     <main className="flex min-h-screen flex-col overflow-x-hidden bg-[#FAF9F7] pt-[128px] font-sans sm:pt-[132px] lg:pt-[72px]">
