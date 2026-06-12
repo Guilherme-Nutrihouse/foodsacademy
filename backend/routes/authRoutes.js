@@ -4,7 +4,7 @@ const ldap = require('ldapjs');
 const { logError, logInfo, logWarn } = require('../security');
 const {
   clearRememberSessionCookie,
-  getRememberedUsername,
+  getAuthenticatedUsername,
   setRememberSessionCookie,
 } = require('../services/rememberSessionService');
 
@@ -18,11 +18,11 @@ router.get('/authenticate', (req, res) =>
 );
 
 router.get('/remember-session', (req, res) => {
-  const username = getRememberedUsername(req);
-  if (!username) return res.status(401).json({ remembered: false });
+  const username = getAuthenticatedUsername(req);
+  if (!username) return res.status(401).json({ authenticated: false, remembered: false });
 
-  logInfo('Sessao lembrada validada', { username });
-  res.status(200).json({ remembered: true, username });
+  logInfo('Sessao autenticada validada', { username });
+  res.status(200).json({ authenticated: true, remembered: true, username });
 });
 
 router.post('/logout', (req, res) => {
@@ -83,8 +83,8 @@ router.post('/authenticate', async (req, res) => {
   }
 
   const username = normalizedUserDN.split('@')[0];
-  if (rememberLogin === true) setRememberSessionCookie(req, res, username);
-  else clearRememberSessionCookie(req, res);
+  // Emite sessao assinada para toda autenticacao LDAP valida.
+  setRememberSessionCookie(req, res, username, rememberLogin === true);
 
   logInfo('Usuario autenticado', { username });
   res.json({ message: 'Autenticação bem-sucedida', username });

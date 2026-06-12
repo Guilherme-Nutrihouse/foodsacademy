@@ -90,11 +90,12 @@ const getCookieValue = (req, name) => {
   return cookie ? decodeURIComponent(cookie.slice(name.length + 1)) : '';
 };
 
-const setRememberSessionCookie = (req, res, username) =>
+// Cria cookie de sessao: persistente apenas quando o usuario marcar "lembrar".
+const setRememberSessionCookie = (req, res, username, remember = false) =>
   res.cookie(
     COOKIE_NAME,
     createRememberSessionToken(username),
-    getCookieOptions(req, getMaxAgeMs())
+    getCookieOptions(req, remember ? getMaxAgeMs() : null)
   );
 
 const clearRememberSessionCookie = (req, res) =>
@@ -103,8 +104,12 @@ const clearRememberSessionCookie = (req, res) =>
 const getRememberedUsername = (req) =>
   verifyRememberSessionToken(getCookieValue(req, COOKIE_NAME));
 
+// Nome explicito para validar qualquer sessao autenticada no middleware.
+const getAuthenticatedUsername = getRememberedUsername;
+
 module.exports = {
   clearRememberSessionCookie,
+  getAuthenticatedUsername,
   getRememberedUsername,
   setRememberSessionCookie,
 };

@@ -5,8 +5,9 @@ const cors = require('cors');
 require('dotenv').config({ path: path.join(__dirname, '.env'), quiet: true });
 
 const { buildCorsOptions, logError, logInfo, securityHeaders } = require('./security');
-const routes = [
-  require('./routes/authRoutes'),
+const requireAuth = require('./middleware/requireAuth');
+const authRoutes = require('./routes/authRoutes');
+const protectedRoutes = [
   require('./routes/cursosRoutes'),
   require('./routes/videosRoutes'),
 ];
@@ -31,7 +32,7 @@ const setStaticHeaders = (res) => {
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
 app.use(securityHeaders, cors(buildCorsOptions()), express.json({ limit: process.env.JSON_LIMIT || '100kb' }));
-// Entrega videos e icones quando o IIS encaminha essas pastas ao Node.
+// Mantem arquivos estaticos no fluxo anterior do front/IIS.
 staticFolders.forEach(({ route, folder }) =>
   app.use(
     route,
@@ -41,7 +42,9 @@ staticFolders.forEach(({ route, folder }) =>
     })
   )
 );
-routes.forEach((route) => app.use('/api', route));
+app.use('/api', authRoutes);
+// Protege APIs internas contra acesso direto por link compartilhado.
+protectedRoutes.forEach((route) => app.use('/api', requireAuth, route));
 
 app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);

@@ -10,7 +10,7 @@ import {
   courseStartsWithPrefix,
   normalizeCourseText,
 } from "../data/courseCollections";
-import { fetchJson, getStoredUsername } from "../utils/app";
+import { asArray, fetchJson, getStoredUsername } from "../utils/app";
 
 const PAGE_SIZE = 6;
 
@@ -23,7 +23,8 @@ const Home = () => {
 
   useEffect(() => {
     fetchJson("/api/cursos")
-      .then(setCursos)
+      // Mantem a Home renderizada mesmo quando a API nao devolver uma lista.
+      .then((data) => setCursos(asArray(data)))
       .catch((err) => console.error("Erro ao carregar cursos:", err));
   }, []);
 

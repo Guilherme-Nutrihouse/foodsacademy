@@ -7,7 +7,12 @@ import {
   getCourseCollection,
   normalizeCourseText,
 } from "../data/courseCollections";
-import { fetchJson, getStoredUsername, withCourseIcon } from "../utils/app";
+import {
+  asArray,
+  fetchJson,
+  getStoredUsername,
+  withCourseIcon,
+} from "../utils/app";
 
 const Cards = () => {
   const [username] = useState(getStoredUsername);
@@ -19,7 +24,8 @@ const Cards = () => {
 
   useEffect(() => {
     fetchJson("/api/cursos")
-      .then((data) => setCursos(data.map(withCourseIcon)))
+      // Evita quebrar filtros quando a API falhar ou mudar o formato da resposta.
+      .then((data) => setCursos(asArray(data).map(withCourseIcon)))
       .catch((error) => console.error("Erro ao carregar cursos:", error))
       .finally(() => setLoading(false));
   }, []);
@@ -51,20 +57,16 @@ const Cards = () => {
       <Header username={username} search={search} setSearch={setSearch} />
 
       <section className="flex w-full flex-col items-center px-4 py-8 sm:px-6 lg:px-8">
+        <h1 className="text-center text-2xl font-semibold text-gray-800">
+          {activeCollection ? activeCollection.title : "Todos os Cursos"}
+        </h1>
+
         <div className="mt-6 grid w-full max-w-screen-xl grid-cols-1 justify-items-center gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {cursosFiltrados.map((curso) => (
             <div key={curso.id} className="flex h-full w-full justify-center">
               <CarouselCard {...curso} title={curso.titulo} />
             </div>
           ))}
-
-          <h1 className="text-center text-2xl font-semibold text-gray-800">
-            {activeCollection ? activeCollection.title : "Todos os Cursos"}
-          </h1>
-
-          <div className="mt-2 text-center text-sm text-gray-500">
-            Mostrando {cursosFiltrados.length} de {cursosBase.length}
-          </div>
 
           {!cursosFiltrados.length && (
             <p className="col-span-full mt-6 text-center text-gray-500">
@@ -77,6 +79,9 @@ const Cards = () => {
           )}
         </div>
       </section>
+      <div className="mt-2 text-center text-sm text-gray-500">
+        Mostrando {cursosFiltrados.length} de {cursosBase.length}
+      </div>
     </main>
   );
 };

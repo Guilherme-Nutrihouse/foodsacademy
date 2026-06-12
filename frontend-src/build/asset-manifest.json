@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.87fe492b.css",
-    "main.js": "/static/js/main.e985b22e.js",
+    "main.js": "/static/js/main.2fff07c5.js",
     "static/media/doll2.png": "/static/media/doll2.6448e8bcf799fefeba0d.png",
     "static/media/logo_novo.svg": "/static/media/logo_novo.8fd777b3e5cecdf913d237174f5b2262.svg",
     "static/media/foodsacademy_logo.svg": "/static/media/foodsacademy_logo.475c5a47eb0da05902426ad94549533e.svg",
@@ -14,10 +14,10 @@
     "static/media/background_onda1.jpg": "/static/media/background_onda1.67cf247a7e8338f4f8b3.jpg",
     "index.html": "/index.html",
     "main.87fe492b.css.map": "/static/css/main.87fe492b.css.map",
-    "main.e985b22e.js.map": "/static/js/main.e985b22e.js.map"
+    "main.2fff07c5.js.map": "/static/js/main.2fff07c5.js.map"
   },
   "entrypoints": [
     "static/css/main.87fe492b.css",
-    "static/js/main.e985b22e.js"
+    "static/js/main.2fff07c5.js"
   ]
 }

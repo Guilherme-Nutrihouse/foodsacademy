@@ -41,7 +41,9 @@ const getRememberedSessionUsername = async () => {
     const data = await fetchJson("/api/remember-session", {
       credentials: "include",
     });
-    return data.remembered && typeof data.username === "string" ? data.username : "";
+    return data.remembered && typeof data.username === "string"
+      ? data.username
+      : "";
   } catch {
     return "";
   }
@@ -49,7 +51,8 @@ const getRememberedSessionUsername = async () => {
 
 const saveBrowserPassword = async (form) => {
   try {
-    if (!form || !window.PasswordCredential || !navigator.credentials?.store) return;
+    if (!form || !window.PasswordCredential || !navigator.credentials?.store)
+      return;
     await navigator.credentials.store(new window.PasswordCredential(form));
   } catch {
     return;
@@ -66,16 +69,23 @@ const fillSavedBrowserCredential = async (usernameInput, passwordInput) => {
     });
     if (!credential) return;
 
-    const credentialUser = credential.id?.replace(/@nutrihouse\.intra$/i, "") || "";
+    const credentialUser =
+      credential.id?.replace(/@nutrihouse\.intra$/i, "") || "";
     const currentUser = usernameInput?.value.trim().toLowerCase();
     const matches =
       !currentUser ||
       [credentialUser.toLowerCase(), credential.id?.toLowerCase()].includes(
-        currentUser
+        currentUser,
       );
 
-    if (usernameInput && credentialUser && matches) usernameInput.value = credentialUser;
-    if (passwordInput && !passwordInput.value && credential.password && matches) {
+    if (usernameInput && credentialUser && matches)
+      usernameInput.value = credentialUser;
+    if (
+      passwordInput &&
+      !passwordInput.value &&
+      credential.password &&
+      matches
+    ) {
       passwordInput.value = credential.password;
     }
   } catch {
@@ -85,7 +95,8 @@ const fillSavedBrowserCredential = async (usernameInput, passwordInput) => {
 
 const authError = (message = "") => {
   const text = message.toLowerCase();
-  if (text.includes("senha") || text.includes("password")) return "Senha incorreta";
+  if (text.includes("senha") || text.includes("password"))
+    return "Senha incorreta";
   if (["usuario", "usuário", "user"].some((key) => text.includes(key))) {
     return "Usuário não encontrado";
   }
@@ -110,7 +121,10 @@ const Login = () => {
       navigate("/home", { replace: true });
     });
 
-    fillSavedBrowserCredential(usernameInputRef.current, passwordInputRef.current);
+    fillSavedBrowserCredential(
+      usernameInputRef.current,
+      passwordInputRef.current,
+    );
     const timer = setTimeout(() => {
       if (usernameInputRef.current && !usernameInputRef.current.value) {
         usernameInputRef.current.value = rememberedUser;
@@ -129,7 +143,11 @@ const Login = () => {
     const data = Object.fromEntries(new FormData(form));
     const user = String(data.username || "").trim();
     const password = String(data.password || "");
-    const missing = !user ? "Informe o usuário" : !password ? "Informe a senha" : "";
+    const missing = !user
+      ? "Informe o usuário"
+      : !password
+        ? "Informe a senha"
+        : "";
 
     setError(missing);
     if (missing) return;
@@ -175,7 +193,11 @@ const Login = () => {
       placeholder: "Digite seu usuário",
       ref: usernameInputRef,
       type: "text",
-      props: { autoCapitalize: "none", autoComplete: "username", spellCheck: false },
+      props: {
+        autoCapitalize: "none",
+        autoComplete: "username",
+        spellCheck: false,
+      },
     },
     {
       id: "senha",
@@ -203,7 +225,11 @@ const Login = () => {
       ))}
 
       <section className="relative z-10 flex w-full max-w-sm flex-col items-center rounded-lg bg-[linear-gradient(135deg,_#B95758,_#e14d3a)] p-5 text-center shadow-lg sm:p-6">
-        <img src={Logo} alt="Logo NutriHouse" className="mb-[-16px] w-36 sm:w-[144px]" />
+        <img
+          src={Logo}
+          alt="Logo NutriHouse"
+          className="mb-[-16px] w-36 sm:w-[144px]"
+        />
         <h1 className="mt-1 text-2xl font-semibold text-white">Bem-vindo</h1>
         <p className="mb-4 text-sm text-white">Acesse com seu usuário:</p>
 
