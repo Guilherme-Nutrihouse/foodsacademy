@@ -10,35 +10,54 @@ const authRoutes = require('./routes/authRoutes');
 const protectedRoutes = [
   require('./routes/cursosRoutes'),
   require('./routes/videosRoutes'),
+  require('./routes/contatosRoutes'), // Protege contatos pelo mesmo fluxo autenticado das APIs internas.
 ];
 
 const app = express();
+// Permite cache curto dos arquivos estaticos sem prender atualizacoes por muito tempo.
+const ONE_HOUR_MS = 60 * 60 * 1000;
+const ONE_DAY_MS = 24 * ONE_HOUR_MS;
+
+const setStaticHeaders = (res) => {
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+};
+
+// Permite ao navegador buscar trechos do MP4 e reaproveitar videos recentes em cache.
+const setVideoHeaders = (res) => {
+  res.setHeader('Accept-Ranges', 'bytes');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+};
+
+// Define opcoes por pasta sem alterar as rotas publicas ja usadas pelo front.
 const staticFolders = [
   {
     route: '/videos_cursos',
     folder: path.join(__dirname, '..', 'videos_cursos'),
+    maxAge: ONE_DAY_MS,
+    setHeaders: setVideoHeaders,
   },
   {
     route: '/icons_cursos',
     folder: path.join(__dirname, '..', 'icons_cursos'),
+    maxAge: ONE_HOUR_MS,
+    setHeaders: setStaticHeaders,
   },
 ];
-
-// Permite cache curto dos arquivos estaticos sem prender atualizacoes por muito tempo.
-const setStaticHeaders = (res) => {
-  res.setHeader('Cache-Control', 'public, max-age=3600');
-};
 
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
 app.use(securityHeaders, cors(buildCorsOptions()), express.json({ limit: process.env.JSON_LIMIT || '100kb' }));
 // Mantem arquivos estaticos no fluxo anterior do front/IIS.
-staticFolders.forEach(({ route, folder }) =>
+staticFolders.forEach(({ route, folder, maxAge, setHeaders }) =>
   app.use(
     route,
     express.static(folder, {
+      acceptRanges: true,
       dotfiles: 'ignore',
-      setHeaders: setStaticHeaders,
+      etag: true,
+      lastModified: true,
+      maxAge,
+      setHeaders,
     })
   )
 );
@@ -55,3 +74,4 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => logInfo('Servidor rodando', { port: PORT }));
+

@@ -1,16 +1,18 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar.jsx";
 import { fetchJson } from "../utils/app";
 
 const emptyCourse = { modulos: [], videos: [], temModulos: false };
+const VIDEO_PRELOAD = "auto"; // Antecipa buffer apenas do video selecionado.
 
 const parseCourse = (data) => {
   if (Array.isArray(data)) return { ...emptyCourse, videos: data };
   if (data.tipo === "com_modulos") {
     return { ...emptyCourse, modulos: data.modulos, temModulos: true };
   }
-  if (data.tipo === "sem_modulos") return { ...emptyCourse, videos: data.videos };
+  if (data.tipo === "sem_modulos")
+    return { ...emptyCourse, videos: data.videos };
   console.error("Resposta inesperada da API:", data);
   return emptyCourse;
 };
@@ -24,7 +26,6 @@ const VideoPage = () => {
     const stored = localStorage.getItem("watchedVideos");
     return stored ? JSON.parse(stored) : {};
   });
-  const videoRef = useRef(null);
 
   useEffect(() => {
     setLoading(true);
@@ -33,14 +34,12 @@ const VideoPage = () => {
         const nextCourse = parseCourse(data);
         setCourse(nextCourse);
         setSelectedVideo(
-          nextCourse.modulos[0]?.videos?.[0] || nextCourse.videos[0] || null
+          nextCourse.modulos[0]?.videos?.[0] || nextCourse.videos[0] || null,
         );
       })
       .catch((err) => console.error("Erro ao carregar vídeos:", err))
       .finally(() => setLoading(false));
   }, [id]);
-
-  useEffect(() => videoRef.current?.load(), [selectedVideo]);
 
   const handleVideoEnded = () => {
     if (!selectedVideo) return;
@@ -88,8 +87,8 @@ const VideoPage = () => {
 
       <div className="aspect-video w-full max-w-5xl overflow-hidden rounded-lg bg-black shadow-2xl sm:rounded-xl">
         {selectedVideo && (
+          /* Evita recarregamento manual duplicado; a key ja troca a midia do player. */
           <video
-            ref={videoRef}
             key={selectedVideo.url}
             className="h-full w-full object-contain"
             controls
@@ -97,6 +96,8 @@ const VideoPage = () => {
             disablePictureInPicture
             onContextMenu={(e) => e.preventDefault()}
             onEnded={handleVideoEnded}
+            playsInline
+            preload={VIDEO_PRELOAD}
           >
             <source src={selectedVideo.url} type="video/mp4" />
             Seu navegador não suporta vídeo.

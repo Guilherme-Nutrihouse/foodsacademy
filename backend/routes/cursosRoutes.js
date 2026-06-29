@@ -19,8 +19,13 @@ const withIcon = (curso) => ({
 router.get(
   '/cursos',
   asyncRoute('Erro ao buscar cursos', async (req, res) => {
-    const cursos = await query(`SELECT ${cursoFields} FROM cursos`);
-    res.json(cursos.map(withIcon));
+    try {
+      const cursos = await query(`SELECT ${cursoFields} FROM cursos`);
+      res.json(cursos.map(withIcon));
+    } catch (error) {
+      console.log(error);
+    }
+
   })
 );
 

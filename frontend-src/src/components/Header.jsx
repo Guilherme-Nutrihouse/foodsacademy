@@ -10,6 +10,7 @@ import SearchBar from "./Searchbar.jsx";
 const navLinks = [
   ["CURSOS", "/home"],
   ["SOBRE", "/sobre"],
+  ["CONTATOS", "/contatos"],
 ];
 
 const Header = ({ username: usernameProp, search, setSearch }) => {
@@ -69,12 +70,14 @@ const Header = ({ username: usernameProp, search, setSearch }) => {
           </button>
         </div>
 
-        <div className="w-full min-w-0 lg:max-w-sm lg:flex-1">
-          <SearchBar
-            value={search ?? localSearch}
-            onChange={setSearch ?? setLocalSearch}
-          />
-        </div>
+        {setSearch && (
+          <div className="w-full min-w-0 lg:max-w-sm lg:flex-1">
+            <SearchBar
+              value={search ?? localSearch}
+              onChange={setSearch ?? setLocalSearch}
+            />
+          </div>
+        )}
 
         <div
           className={`${

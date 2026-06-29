@@ -11,14 +11,15 @@ const CarouselCard = ({
   onClick,
 }) => {
   const navigate = useNavigate();
-  const imageSrc = icon_url || caminho_icon || icon || "/img/default-course-icon.png";
+  const imageSrc =
+    icon_url || caminho_icon || icon || "/img/default-course-icon.png";
 
   const handleClick = () => (onClick ? onClick() : navigate(`/video/${id}`));
 
   return (
     <button
       onClick={handleClick}
-      className={`flex min-h-[10rem] w-full max-w-xs items-center justify-start rounded-lg bg-[linear-gradient(135deg,_#B95758,_#e14d3a)] p-5 text-left font-poppins text-white shadow-xl transition duration-200 hover:-translate-y-1 hover:shadow-2xl sm:min-h-[11rem] sm:p-6 ${className}`}
+      className={`flex min-h-[10rem] w-80 items-center justify-start rounded-lg bg-[linear-gradient(135deg,_#B95758,_#e14d3a)] p-5 text-left font-poppins text-white shadow-xl transition duration-200 hover:-translate-y-1 hover:shadow-2xl sm:min-h-[11rem] sm:p-6 ${className}`}
     >
       <img
         src={imageSrc}

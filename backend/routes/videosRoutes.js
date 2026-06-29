@@ -26,48 +26,53 @@ const mapVideo = (baseUrl, modulo) => (video) => ({
 router.get(
   '/videos/:id_curso',
   asyncRoute('Erro ao buscar vídeos do curso', async (req, res) => {
-    const params = { id: [sql.Int, req.params.id_curso] };
-    const [curso] = await query('SELECT titulo, caminho FROM cursos WHERE id = @id', params);
+    try {
+      const params = { id: [sql.Int, req.params.id_curso] };
+      const [curso] = await query('SELECT titulo, caminho FROM cursos WHERE id = @id', params);
 
-    if (!curso) return res.status(404).json({ error: 'Curso não encontrado' });
+      if (!curso) return res.status(404).json({ error: 'Curso não encontrado' });
 
-    const idCurso = { id_curso: [sql.Int, req.params.id_curso] };
-    const [modulos, videos] = await Promise.all([
-      query(
-        `SELECT id, titulo, descricao, caminho, ordem
+      const idCurso = { id_curso: [sql.Int, req.params.id_curso] };
+      const [modulos, videos] = await Promise.all([
+        query(
+          `SELECT id, titulo, descricao, caminho, ordem
          FROM modulos
          WHERE id_curso = @id_curso
          ORDER BY ordem`,
-        idCurso
-      ),
-      query(
-        `SELECT id, id_modulo, titulo, descricao, url
+          idCurso
+        ),
+        query(
+          `SELECT id, id_modulo, titulo, descricao, url
          FROM video
          WHERE id_curso = @id_curso`,
-        idCurso
-      ),
-    ]);
-    const baseUrl = `/videos_cursos/${String(curso.caminho || '').replace(/\\/g, '/').trim()}`;
+          idCurso
+        ),
+      ]);
+      const baseUrl = `/videos_cursos/${String(curso.caminho || '').replace(/\\/g, '/').trim()}`;
 
-    if (!modulos.length) {
-      return res.json({
-        tipo: 'sem_modulos',
-        videos: videos.filter((video) => !video.id_modulo).map(mapVideo(baseUrl)),
+      if (!modulos.length) {
+        return res.json({
+          tipo: 'sem_modulos',
+          videos: videos.filter((video) => !video.id_modulo).map(mapVideo(baseUrl)),
+        });
+      }
+
+      res.json({
+        tipo: 'com_modulos',
+        modulos: modulos.map((modulo) => ({
+          id: modulo.id,
+          titulo: modulo.titulo,
+          descricao: modulo.descricao,
+          ordem: modulo.ordem,
+          videos: videos
+            .filter((video) => video.id_modulo === modulo.id)
+            .map(mapVideo(baseUrl, modulo)),
+        })),
       });
+    } catch (error) {
+      console.log(error);
     }
 
-    res.json({
-      tipo: 'com_modulos',
-      modulos: modulos.map((modulo) => ({
-        id: modulo.id,
-        titulo: modulo.titulo,
-        descricao: modulo.descricao,
-        ordem: modulo.ordem,
-        videos: videos
-          .filter((video) => video.id_modulo === modulo.id)
-          .map(mapVideo(baseUrl, modulo)),
-      })),
-    });
   })
 );
 

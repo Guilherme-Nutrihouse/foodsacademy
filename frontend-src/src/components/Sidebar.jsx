@@ -136,7 +136,11 @@ const Sidebar = ({
               aria-label="Voltar"
               className="flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-[#ffffff22]"
             >
-              <Icon name="back" className="h-5 w-5 text-white" strokeWidth={3} />
+              <Icon
+                name="back"
+                className="h-5 w-5 text-white"
+                strokeWidth={3}
+              />
             </button>
             <div className="absolute left-10 top-1/2 hidden -translate-y-1/2 whitespace-nowrap rounded-md bg-yellow-400 px-2 py-1 text-xs text-white shadow-md group-hover:block">
               {location.pathname.includes("/materiais")

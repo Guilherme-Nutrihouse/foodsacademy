@@ -11,11 +11,12 @@ import Login from "./components/Login";
 import Home from "./pages/Home";
 import Sobre from "./pages/Sobre";
 import Cards from "./pages/Cards";
+import Contatos from "./pages/Contatos";
 import VideoPage from "./pages/VideoPage";
 import MaterialPage from "./pages/MaterialPage";
 import { fetchJson } from "./utils/app";
 
-// Valida a sessao assinada no backend antes de mostrar qualquer tela interna.
+// Valida a sessao assinada uma vez enquanto a area interna estiver montada.
 const PrivateRoute = () => {
   const [status, setStatus] = useState("checking");
   const location = useLocation();
@@ -40,7 +41,7 @@ const PrivateRoute = () => {
     return () => {
       active = false;
     };
-  }, [location.pathname]);
+  }, []); // Evita nova validacao ao trocar de curso/rota interna.
 
   if (status === "checking") {
     return (
@@ -68,6 +69,8 @@ function App() {
           <Route path="/video/:id" element={<VideoPage />} />
           <Route path="/materiais/:id" element={<MaterialPage />} />
           <Route path="/sobre" element={<Sobre />} />
+          {/* Integra contatos na mesma area interna protegida por sessao LDAP. */}
+          <Route path="/contatos" element={<Contatos />} />
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Route>
       </Routes>

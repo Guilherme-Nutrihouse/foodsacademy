@@ -104,8 +104,7 @@ const authError = (message = "") => {
 };
 
 const Login = () => {
-  const [rememberedUser] = useState(getRememberedUser);
-  const [rememberUser, setRememberUser] = useState(Boolean(rememberedUser));
+  const [rememberedUser, setRememberedUser] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const usernameInputRef = useRef(null);
@@ -114,6 +113,10 @@ const Login = () => {
 
   useEffect(() => {
     let active = true;
+    const savedUser = getRememberedUser();
+
+    // Checkbox removido: carrega o usuario salvo assim que a tela abre.
+    setRememberedUser(savedUser);
 
     getRememberedSessionUsername().then((username) => {
       if (!active || !username) return;
@@ -125,17 +128,22 @@ const Login = () => {
       usernameInputRef.current,
       passwordInputRef.current,
     );
+
+    return () => {
+      active = false;
+    };
+  }, [navigate]);
+
+  useEffect(() => {
+    // Preenche o campo apos o navegador tentar aplicar credenciais salvas.
     const timer = setTimeout(() => {
       if (usernameInputRef.current && !usernameInputRef.current.value) {
         usernameInputRef.current.value = rememberedUser;
       }
     }, 600);
 
-    return () => {
-      active = false;
-      clearTimeout(timer);
-    };
-  }, [navigate, rememberedUser]);
+    return () => clearTimeout(timer);
+  }, [rememberedUser]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -161,7 +169,7 @@ const Login = () => {
         body: JSON.stringify({
           userDN: `${user}@nutrihouse.intra`,
           password,
-          rememberLogin: rememberUser,
+          rememberLogin: true,
         }),
       });
       const result = await response.json();
@@ -172,11 +180,11 @@ const Login = () => {
       }
 
       safe(() => localStorage.setItem("username", result.username));
-      saveRememberedUser(rememberUser ? user : "");
-      if (rememberUser) {
-        if (usernameInputRef.current) usernameInputRef.current.value = user;
-        await saveBrowserPassword(form);
-      }
+      // Checkbox removido: todo login valido passa a lembrar o usuario.
+      saveRememberedUser(user);
+      setRememberedUser(user);
+      if (usernameInputRef.current) usernameInputRef.current.value = user;
+      await saveBrowserPassword(form);
       navigate("/home");
     } catch {
       setError("Erro ao conectar ao servidor");
@@ -255,16 +263,6 @@ const Login = () => {
               />
             </div>
           ))}
-
-          <label className="mx-auto -mt-1 flex w-full max-w-[265px] items-center gap-2 text-left text-sm text-white">
-            <input
-              type="checkbox"
-              checked={rememberUser}
-              onChange={(e) => setRememberUser(e.target.checked)}
-              className="h-4 w-4 rounded border-white/70 accent-white-300"
-            />
-            <span>Lembrar acesso neste computador</span>
-          </label>
 
           <button
             type="submit"

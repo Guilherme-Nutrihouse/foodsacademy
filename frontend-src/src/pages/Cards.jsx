@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import CarouselCard from "../components/CarouselCard";
 import Header from "../components/Header";
+import backgroundImage from "../assets/background_teknisa_page.png";
 import {
   courseStartsWithPrefix,
   getCourseCollection,
@@ -53,23 +54,31 @@ const Cards = () => {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center overflow-x-hidden bg-white pt-[128px] sm:pt-[132px] lg:pt-[72px]">
+    <main className="flex min-h-screen flex-col items-center overflow-x-hidden bg-[#FAF9F7] pt-[128px] font-sans sm:pt-[132px] lg:pt-[72px]">
       <Header username={username} search={search} setSearch={setSearch} />
 
-      <section className="flex w-full flex-col items-center px-4 py-8 sm:px-6 lg:px-8">
+      <section
+        className="relative flex w-full flex-1 flex-col items-center px-4 py-8 sm:px-6 lg:px-8"
+        // Aplica o mesmo fundo usado na Home na area dos cards.
+        style={{
+          backgroundImage: `url(${backgroundImage})`,
+          backgroundPosition: "bottom",
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "100% 35%",
+        }}
+      >
         <h1 className="text-center text-2xl font-semibold text-gray-800">
           {activeCollection ? activeCollection.title : "Todos os Cursos"}
         </h1>
 
-        <div className="mt-6 grid w-full max-w-screen-xl grid-cols-1 justify-items-center gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {/* Centraliza poucos cards e mantem a quebra em linhas para listas maiores. */}
+        <div className="mt-6 flex w-full max-w-screen-xl flex-wrap justify-center gap-5">
           {cursosFiltrados.map((curso) => (
-            <div key={curso.id} className="flex h-full w-full justify-center">
-              <CarouselCard {...curso} title={curso.titulo} />
-            </div>
+            <CarouselCard key={curso.id} {...curso} title={curso.titulo} />
           ))}
 
           {!cursosFiltrados.length && (
-            <p className="col-span-full mt-6 text-center text-gray-500">
+            <p className="mt-6 w-full text-center text-gray-500">
               {search
                 ? `Nenhum curso encontrado para "${search}".`
                 : activeCollection
@@ -78,10 +87,11 @@ const Cards = () => {
             </p>
           )}
         </div>
+
+        <div className="mt-2 text-center text-sm text-gray-500">
+          Mostrando {cursosFiltrados.length} de {cursosBase.length}
+        </div>
       </section>
-      <div className="mt-2 text-center text-sm text-gray-500">
-        Mostrando {cursosFiltrados.length} de {cursosBase.length}
-      </div>
     </main>
   );
 };
