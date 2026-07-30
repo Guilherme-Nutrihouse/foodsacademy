@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import backgroundImage from "../assets/images/background_teknisa_page.png";
+import backgroundImage from "../assets/background_teknisa_page.png";
 import CarouselCard from "../components/CarouselCard";
 import Chatbot from "../components/Chatbot";
 import Header from "../components/Header";
@@ -10,12 +10,11 @@ import {
   courseStartsWithPrefix,
   normalizeCourseText,
 } from "../data/courseCollections";
-import { asArray, fetchJson, getStoredUsername } from "../utils/app";
+import { asArray, fetchJson } from "../utils/app";
 
 const PAGE_SIZE = 6;
 
 const Home = () => {
-  const [username] = useState(getStoredUsername);
   const [page, setPage] = useState(0);
   const [cursos, setCursos] = useState([]);
   const [search, setSearch] = useState("");
@@ -32,7 +31,7 @@ const Home = () => {
     // Agrupa cursos por prefixo para exibir filtros como cards de colecao.
     const collectionCards = COURSE_COLLECTIONS.map((collection) => {
       const cursosColecao = cursos.filter((curso) =>
-        courseStartsWithPrefix(curso, collection.prefix)
+        courseStartsWithPrefix(curso, collection.prefix),
       );
 
       return {
@@ -53,8 +52,8 @@ const Home = () => {
     const cursosSemColecao = cursos.filter(
       (curso) =>
         !COURSE_COLLECTIONS.some((collection) =>
-          courseStartsWithPrefix(curso, collection.prefix)
-        )
+          courseStartsWithPrefix(curso, collection.prefix),
+        ),
     );
 
     return [
@@ -67,13 +66,18 @@ const Home = () => {
     const q = normalizeCourseText(search.trim());
     return q
       ? cards.filter((curso) =>
-          normalizeCourseText(curso.searchText || curso.titulo || "").includes(q)
+          normalizeCourseText(curso.searchText || curso.titulo || "").includes(
+            q,
+          ),
         )
       : cards;
   }, [cards, search]);
 
   const total = Math.ceil(cursosFiltrados.length / PAGE_SIZE);
-  const current = cursosFiltrados.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const current = cursosFiltrados.slice(
+    page * PAGE_SIZE,
+    (page + 1) * PAGE_SIZE,
+  );
 
   useEffect(() => setPage(0), [search]);
 
@@ -88,12 +92,14 @@ const Home = () => {
   // Usa a rota da colecao selecionada quando o card for um filtro.
   const openCurso = (curso) =>
     navigate(
-      curso.type === "collection" ? curso.collection.route : `/video/${curso.id}`
+      curso.type === "collection"
+        ? curso.collection.route
+        : `/video/${curso.id}`,
     );
 
   return (
-    <main className="flex min-h-screen flex-col overflow-x-hidden bg-[#FAF9F7] pt-[128px] font-sans sm:pt-[132px] lg:pt-[72px]">
-      <Header username={username} search={search} setSearch={setSearch} />
+    <main className="flex min-h-screen flex-col overflow-x-hidden bg-[#FFFFFF] pt-[128px] font-sans sm:pt-[132px] lg:pt-[72px]">
+      <Header search={search} setSearch={setSearch} />
 
       <section
         className="relative flex flex-1 flex-col items-center justify-center py-6 sm:py-8"

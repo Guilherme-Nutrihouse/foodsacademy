@@ -18,7 +18,7 @@ const MaterialPage = () => {
   const materiais = materiaisPorCurso[id] || [];
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden bg-[#FAF9F7] font-[Poppins,sans-serif]">
+    <main className="relative min-h-screen overflow-x-hidden bg-[#FFFFFF] font-[Poppins,sans-serif]">
       <Sidebar showButton={false} />
 
       <section className="w-full px-4 pb-8 pt-24 sm:px-6 md:pl-[332px] md:pr-8 md:pt-8">

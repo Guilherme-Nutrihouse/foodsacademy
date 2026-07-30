@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import Book from "../assets/images/book.png";
 import Clock from "../assets/images/clock.png";
 import Doll from "../assets/images/doll2.png";
@@ -8,7 +8,6 @@ import Onda2 from "../assets/images/background_onda4.jpg";
 import Play from "../assets/images/play-button.png";
 import Footer from "../components/Footer.jsx";
 import Header from "../components/Header";
-import { getStoredUsername } from "../utils/app";
 
 const items = [
   [List, "Cursos e treinamentos organizados"],
@@ -18,10 +17,8 @@ const items = [
 ];
 
 const Sobre = () => {
-  const [username] = useState(getStoredUsername);
-
   return (
-    <main className="relative flex min-h-screen flex-col overflow-x-hidden bg-[#FAF9F7]">
+    <main className="relative flex min-h-screen flex-col overflow-x-hidden bg-[#FFFFFF]">
       <img
         src={Onda1}
         alt=""
@@ -33,7 +30,7 @@ const Sobre = () => {
         className="pointer-events-none absolute left-0 top-0 z-0 h-[28%] max-w-[70%] object-contain sm:h-[40%] sm:max-w-[50%]"
       />
 
-      <Header username={username} />
+      <Header />
 
       <div className="relative z-10 mx-auto w-full max-w-5xl flex-1 px-4 pt-[128px] sm:px-6 sm:pt-[132px] lg:px-8 lg:pt-[72px]">
         <section className="my-8 grid items-center gap-6 md:my-12 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] md:gap-8">
@@ -51,9 +48,9 @@ const Sobre = () => {
                 NOSSA MISSÃO
               </h2>
               <p className="text-sm leading-relaxed text-gray-800 md:text-base">
-                Promover um ambiente de aprendizado moderno, acessível e integrado
-                ao dia a dia da NutriHouse, com foco em qualidade, inovação e
-                desenvolvimento contínuo.
+                Promover um ambiente de aprendizado moderno, acessível e
+                integrado ao dia a dia da NutriHouse, com foco em qualidade,
+                inovação e desenvolvimento contínuo.
               </p>
             </div>
 
@@ -62,10 +59,10 @@ const Sobre = () => {
                 NOSSA VISÃO
               </h2>
               <p className="text-sm leading-relaxed text-gray-800 md:text-base">
-                Transformar a NutriHouse em um ambiente de aprendizado contínuo e
-                de excelência, promovendo o crescimento e a capacitação de nossos
-                colaboradores, fortalecendo nossa cultura e garantindo a melhoria
-                constante dos nossos processos e serviços.
+                Transformar a NutriHouse em um ambiente de aprendizado contínuo
+                e de excelência, promovendo o crescimento e a capacitação de
+                nossos colaboradores, fortalecendo nossa cultura e garantindo a
+                melhoria constante dos nossos processos e serviços.
               </p>
             </div>
           </div>

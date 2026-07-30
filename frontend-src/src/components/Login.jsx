@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import OndaTop from "../assets/images/background_onda1.jpg";
 import OndaBottom from "../assets/images/background_onda2.jpg";
 import Logo from "../assets/logos/logo_branca.png";
+import { useUsuario } from "../contexts/UsuarioContext";
 import { fetchJson } from "../utils/app";
 
 const USER_KEY = "rememberedLoginUser";
@@ -36,16 +37,14 @@ const saveRememberedUser = (username) =>
     localStorage.setItem(USER_KEY, username);
   });
 
-const getRememberedSessionUsername = async () => {
+const getRememberedSessionUser = async () => {
   try {
     const data = await fetchJson("/api/remember-session", {
       credentials: "include",
     });
-    return data.remembered && typeof data.username === "string"
-      ? data.username
-      : "";
+    return data.remembered && typeof data.username === "string" ? data : null;
   } catch {
-    return "";
+    return null;
   }
 };
 
@@ -110,6 +109,7 @@ const Login = () => {
   const usernameInputRef = useRef(null);
   const passwordInputRef = useRef(null);
   const navigate = useNavigate();
+  const { atualizarUsuario } = useUsuario();
 
   useEffect(() => {
     let active = true;
@@ -118,9 +118,9 @@ const Login = () => {
     // Checkbox removido: carrega o usuario salvo assim que a tela abre.
     setRememberedUser(savedUser);
 
-    getRememberedSessionUsername().then((username) => {
-      if (!active || !username) return;
-      safe(() => localStorage.setItem("username", username));
+    getRememberedSessionUser().then((sessionUser) => {
+      if (!active || !sessionUser) return;
+      safe(() => atualizarUsuario(sessionUser));
       navigate("/home", { replace: true });
     });
 
@@ -132,7 +132,7 @@ const Login = () => {
     return () => {
       active = false;
     };
-  }, [navigate]);
+  }, [atualizarUsuario, navigate]);
 
   useEffect(() => {
     // Preenche o campo apos o navegador tentar aplicar credenciais salvas.
@@ -179,7 +179,7 @@ const Login = () => {
         return;
       }
 
-      safe(() => localStorage.setItem("username", result.username));
+      safe(() => atualizarUsuario(result));
       // Checkbox removido: todo login valido passa a lembrar o usuario.
       saveRememberedUser(user);
       setRememberedUser(user);

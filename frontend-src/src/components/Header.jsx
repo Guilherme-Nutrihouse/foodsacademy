@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import ExitIcon from "../assets/images/exit2.png";
 import Logo from "../assets/logos/foodsacademy_logo.svg";
 import User from "../assets/logos/logo_novo.svg";
-import { getStoredUsername } from "../utils/app";
+import { useUsuario } from "../contexts/UsuarioContext";
 import Icon from "./Icon";
 import SearchBar from "./Searchbar.jsx";
 
@@ -19,6 +19,8 @@ const Header = ({ username: usernameProp, search, setSearch }) => {
   const [localSearch, setLocalSearch] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
+  const { usuario, limparUsuario } = useUsuario();
+  const username = usernameProp || usuario.username;
   const isActive = (path) => location.pathname === path;
 
   useEffect(() => {
@@ -39,7 +41,7 @@ const Header = ({ username: usernameProp, search, setSearch }) => {
       /* segue com logout local */
     }
 
-    localStorage.removeItem("username");
+    limparUsuario();
     navigate("/");
   };
 
@@ -111,7 +113,7 @@ const Header = ({ username: usernameProp, search, setSearch }) => {
               <span className="min-w-0 truncate">
                 Olá,{" "}
                 <strong className="font-semibold">
-                  {usernameProp || getStoredUsername()}
+                  {username}
                 </strong>
               </span>
               <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-black/10 bg-white shadow-sm transition group-hover:border-yellow-500/70 sm:h-9 sm:w-9">

@@ -14,12 +14,14 @@ import Cards from "./pages/Cards";
 import Contatos from "./pages/Contatos";
 import VideoPage from "./pages/VideoPage";
 import MaterialPage from "./pages/MaterialPage";
+import { UsuarioProvider, useUsuario } from "./contexts/UsuarioContext";
 import { fetchJson } from "./utils/app";
 
 // Valida a sessao assinada uma vez enquanto a area interna estiver montada.
 const PrivateRoute = () => {
   const [status, setStatus] = useState("checking");
   const location = useLocation();
+  const { atualizarUsuario, limparUsuario } = useUsuario();
 
   useEffect(() => {
     let active = true;
@@ -28,20 +30,20 @@ const PrivateRoute = () => {
     fetchJson("/api/remember-session")
       .then((data) => {
         if (!active) return;
-        if (data.username) localStorage.setItem("username", data.username);
+        atualizarUsuario(data);
         setStatus("authorized");
       })
       .catch(() => {
         if (!active) return;
         // Remove identidade local quando a sessao real nao existe mais.
-        localStorage.removeItem("username");
+        limparUsuario();
         setStatus("unauthorized");
       });
 
     return () => {
       active = false;
     };
-  }, []); // Evita nova validacao ao trocar de curso/rota interna.
+  }, [atualizarUsuario, limparUsuario]); // Evita nova validacao ao trocar de curso/rota interna.
 
   if (status === "checking") {
     return (
@@ -60,21 +62,23 @@ const PrivateRoute = () => {
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route element={<PrivateRoute />}>
-          <Route path="/home" element={<Home />} />
-          <Route path="/cards" element={<Cards />} />
-          <Route path="/video/:id" element={<VideoPage />} />
-          <Route path="/materiais/:id" element={<MaterialPage />} />
-          <Route path="/sobre" element={<Sobre />} />
-          {/* Integra contatos na mesma area interna protegida por sessao LDAP. */}
-          <Route path="/contatos" element={<Contatos />} />
-          <Route path="*" element={<Navigate to="/home" replace />} />
-        </Route>
-      </Routes>
-    </Router>
+    <UsuarioProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route element={<PrivateRoute />}>
+            <Route path="/home" element={<Home />} />
+            <Route path="/cards" element={<Cards />} />
+            <Route path="/video/:id" element={<VideoPage />} />
+            <Route path="/materiais/:id" element={<MaterialPage />} />
+            <Route path="/sobre" element={<Sobre />} />
+            {/* Integra contatos na mesma area interna protegida por sessao LDAP. */}
+            <Route path="/contatos" element={<Contatos />} />
+            <Route path="*" element={<Navigate to="/home" replace />} />
+          </Route>
+        </Routes>
+      </Router>
+    </UsuarioProvider>
   );
 }
 

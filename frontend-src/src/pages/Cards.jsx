@@ -11,12 +11,10 @@ import {
 import {
   asArray,
   fetchJson,
-  getStoredUsername,
   withCourseIcon,
 } from "../utils/app";
 
 const Cards = () => {
-  const [username] = useState(getStoredUsername);
   const [cursos, setCursos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -54,8 +52,8 @@ const Cards = () => {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center overflow-x-hidden bg-[#FAF9F7] pt-[128px] font-sans sm:pt-[132px] lg:pt-[72px]">
-      <Header username={username} search={search} setSearch={setSearch} />
+    <main className="flex min-h-screen flex-col items-center overflow-x-hidden bg-[#FFFFFF] pt-[128px] font-sans sm:pt-[132px] lg:pt-[72px]">
+      <Header search={search} setSearch={setSearch} />
 
       <section
         className="relative flex w-full flex-1 flex-col items-center px-4 py-8 sm:px-6 lg:px-8"
@@ -65,6 +63,7 @@ const Cards = () => {
           backgroundPosition: "bottom",
           backgroundRepeat: "no-repeat",
           backgroundSize: "100% 35%",
+          backgroundColor: "white"
         }}
       >
         <h1 className="text-center text-2xl font-semibold text-gray-800">
