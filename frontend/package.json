@@ -1,0 +1,9 @@
+{
+  "name": "foods-academy-frontend",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix ../frontend-src run dev",
+    "start": "npm --prefix ../frontend-src run dev",
+    "build": "npm --prefix ../frontend-src run build"
+  }
+}

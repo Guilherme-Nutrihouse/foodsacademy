@@ -5,5 +5,7 @@ backend/node_modules/
 frontend-src/node_modules/
 agents.md
 docs
-frontend
+# Mantem a build publicada fora do Git, mas versiona os atalhos locais de desenvolvimento.
+frontend/*
+!frontend/package.json
 videos_cursos
