@@ -1,0 +1,65 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.7/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "maxSize": 1048576,
+    "includes": [
+      "*.json",
+      ".vscode/**/*.json",
+      "backend/**/*.js",
+      "backend/**/*.json",
+      "frontend-src/*.js",
+      "frontend-src/*.json",
+      "frontend-src/src/**/*.js",
+      "frontend-src/src/**/*.jsx",
+      "frontend-src/src/**/*.json",
+      "frontend-src/src/**/*.css",
+      "frontend-src/public/**/*.html",
+      "!**/node_modules",
+      "!**/build",
+      "!**/dist",
+      "!**/coverage",
+      "!**/*.map",
+      "!**/package-lock.json",
+      "!backend/logs",
+      "!frontend"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "formatWithErrors": false,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 80,
+    "lineEnding": "crlf",
+    "attributePosition": "auto",
+    "bracketSpacing": true
+  },
+  "linter": {
+    "enabled": false
+  },
+  "assist": {
+    "enabled": false
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "jsxQuoteStyle": "double",
+      "quoteProperties": "asNeeded",
+      "trailingCommas": "all",
+      "semicolons": "always",
+      "arrowParentheses": "always",
+      "bracketSameLine": false
+    }
+  },
+  "json": {
+    "parser": {
+      "allowComments": true,
+      "allowTrailingCommas": true
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "scripts": {
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "biome": "biome"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.7"
+  }
+}

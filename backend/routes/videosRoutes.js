@@ -76,6 +76,26 @@ router.get(
   })
 );
 
+router.get(
+  '/videos/length/:id_curso',
+  asyncRoute('Erro ao buscar quantidade de videos do curso', async (req, res) => {
+    const params = { id: [sql.Int, req.params.id_curso] };
+    const [curso] = await query('SELECT id FROM cursos WHERE id = @id', params);
+
+    if (!curso) return res.status(404).json({ error: 'Curso nao encontrado' });
+
+    const idCurso = { id_curso: [sql.Int, req.params.id_curso] };
+    const [resultado] = await query(
+      `SELECT COUNT(*) AS total
+       FROM video
+       WHERE id_curso = @id_curso`,
+      idCurso
+    );
+
+    res.json(resultado?.total ?? 0);
+  })
+);
+
 
 
 module.exports = router;

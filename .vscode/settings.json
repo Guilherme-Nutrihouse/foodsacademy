@@ -1,4 +1,52 @@
-﻿{
+{
   "simpleBrowser.focusLockIndicator.enabled": true,
-  "editor.formatOnSave": false
+  "editor.formatOnSave": false,
+  "prettier.enable": false,
+  "biome.enabled": true,
+  "biome.requireConfiguration": true,
+  "biome.configurationPath": "biome.json",
+  "biome.lsp.watcher.kind": "none",
+  "biome.runFromTemporaryLocation": true,
+  "biome.suggestInstallingGlobally": false,
+  "[javascript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/build/**": true,
+    "**/dist/**": true,
+    "**/coverage/**": true
+  },
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/build": true,
+    "**/dist": true,
+    "**/coverage": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/build": true,
+    "**/dist": true,
+    "**/coverage": true
+  }
 }

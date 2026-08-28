@@ -6,6 +6,7 @@ import Header from "../components/Header";
 import { useUsuario } from "../contexts/UsuarioContext";
 import { CirclePlus } from "lucide-react";
 import Input from "../components/Input";
+import { Trash2, HeartPlus, SquarePen } from "lucide-react";
 
 const PAGE_SIZE = 10;
 const FAVORITES_STORAGE_PREFIX = "contatosFavoritos";
@@ -75,6 +76,57 @@ const fetchContacts = async () => {
   });
 };
 
+const createContact = async (contato) => {
+  const options = {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(contato),
+  };
+  const response = await fetch("/api/contatos", options);
+
+  if (response.status !== 404) return response;
+
+  const localApiBase = getLocalApiBase();
+  if (!localApiBase) return response;
+
+  return fetch(`${localApiBase}/api/contatos`, options);
+};
+
+const updateContactRequest = async (id, contato) => {
+  const contactId = encodeURIComponent(String(id));
+  const options = {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(contato),
+  };
+  const response = await fetch(`/api/contatos/${contactId}`, options);
+
+  if (response.status !== 404) return response;
+
+  const localApiBase = getLocalApiBase();
+  if (!localApiBase) return response;
+
+  return fetch(`${localApiBase}/api/contatos/${contactId}`, options);
+};
+
+const deleteContactRequest = async (id) => {
+  const contactId = encodeURIComponent(String(id));
+  const options = {
+    method: "DELETE",
+    credentials: "include",
+  };
+  const response = await fetch(`/api/contatos/${contactId}`, options);
+
+  if (response.status !== 404) return response;
+
+  const localApiBase = getLocalApiBase();
+  if (!localApiBase) return response;
+
+  return fetch(`${localApiBase}/api/contatos/${contactId}`, options);
+};
+
 // Mantem a tela independente de utils para consumir somente a API de contatos.
 const normalizeText = (value = "") =>
   String(value)
@@ -112,12 +164,14 @@ const copyText = async (text) => {
 };
 
 function Contatos() {
-  const [nome, setNome] = useState('');
-  const [telefone, setTelefone] = useState('');
-  const [tipo, setTipo] = useState('');
-  const [departamento, setDepartmento] = useState('');
+  const [nome, setNome] = useState("");
+  const [ddd, setDdd] = useState("");
+  const [numero, setNumero] = useState("");
+  const [tipo, setTipo] = useState("");
+  const [departamento, setDepartmento] = useState("");
   const [contacts, setContacts] = useState([]);
   const [copiedId, setCopiedId] = useState(null);
+  const [editingId, setEditingId] = useState(null);
   const [department, setDepartment] = useState("todos");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -125,6 +179,7 @@ function Contatos() {
   const [search, setSearch] = useState("");
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [showInput, setShowInput] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
   const { usuario, isAdmin } = useUsuario();
   const username = usuario.username;
@@ -262,27 +317,224 @@ function Contatos() {
     });
   }
 
-  async function onSubmit(e){
-    e.preventDefault();
+  async function deleteContact(id) {
+    if (!isAdmin || id === null || id === undefined) return;
+
+    const confirmed = window.confirm("Deseja realmente deletar este contato?");
+    if (!confirmed) return;
 
     try {
-       const formData = new FormData(e.currentTarget);
+      setError("");
 
-       const nomeLimpo = String(formData.get("nome") ?? "").trim();
-       const telefoneLimpo = String(formData.get("telefone") ?? "").trim();
-       const tipoLimpo = String(formData.get("tipo") ?? "").trim();
-       const departamentoLimpo = String(formData.get("nome") ?? "").trim();
+      const response = await deleteContactRequest(id);
+      const data = await response.json().catch(() => ({}));
 
-        if (
-        !nomeLimpo ||
-        !telefoneLimpo ||
-        !tipoLimpo ||
-        !departamentoLimpo) {
-        setError("Todos os campos são obrigatórios");
+      if (!response.ok) {
+        setError(
+          data.error || data.message || "Não foi possível deletar o contato.",
+        );
         return;
       }
+
+      const contactId = String(id);
+      setContacts((prev) =>
+        prev.filter((contact) => String(contact.id) !== contactId),
+      );
+      setFavoritos((prev) => {
+        const next = prev.filter((item) => item !== contactId);
+        if (next.length !== prev.length) {
+          saveStoredFavorites(username, next);
+        }
+        return next;
+      });
     } catch (error) {
-      
+      console.error("Erro ao deletar contato:", error);
+      setError("Erro ao conectar ao servidor.");
+    }
+  }
+
+  function showInputs() {
+    if (editingId) {
+      setEditingId(null);
+      setNome("");
+      setDdd("");
+      setNumero("");
+      setTipo("");
+      setDepartmento("");
+    } else {
+      setShowInput(!showInput);
+    }
+  }
+
+  function editContact(contact) {
+    if (!isAdmin || contact.id === null || contact.id === undefined) return;
+
+    try {
+      const telefoneLimpo = String(contact.telefone || "").replace(/\D/g, "");
+      const telefoneSemPais = telefoneLimpo.startsWith("55")
+        ? telefoneLimpo.slice(2)
+        : telefoneLimpo;
+
+      setEditingId(contact.id);
+      if (!showInput) {
+        setShowInput(!showInput);
+      }
+      setNome(contact.nome);
+      setDdd(telefoneSemPais.slice(0, 2));
+      setNumero(telefoneSemPais.slice(2));
+      setTipo(contact.tipo);
+      setDepartmento(contact.departamento);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async function updateContact(id, contato) {
+    if (!isAdmin || id === null || id === undefined) return false;
+
+    try {
+      setError("");
+
+      const contactId = String(id);
+      const response = await updateContactRequest(id, contato);
+
+      // Lê o JSON apenas uma vez para manter o fluxo da resposta simples.
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setError(
+          data.error || data.message || "Não foi possível atualizar o contato.",
+        );
+        return false;
+      }
+
+      if (data.contato) {
+        setContacts((prev) =>
+          [
+            ...prev.filter((contact) => String(contact.id) !== contactId),
+            data.contato,
+          ].sort((a, b) =>
+            String(a.nome || "").localeCompare(String(b.nome || "")),
+          ),
+        );
+      } else {
+        const contatosResponse = await fetchContacts();
+        const contatos = await contatosResponse.json().catch(() => []);
+        if (contatosResponse.ok) {
+          setContacts(Array.isArray(contatos) ? contatos : []);
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Erro ao atualizar contato:", error);
+      setError("Erro ao conectar ao servidor.");
+      return false;
+    }
+  }
+  async function onSubmit(event) {
+    event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+    const nomeLimpo = String(formData.get("nome") ?? "").trim();
+    const dddLimpo = String(formData.get("ddd") ?? "").replace(/\D/g, "");
+    const numeroLimpo = String(formData.get("numero") ?? "").replace(/\D/g, "");
+    const tipoLimpo = String(formData.get("tipo") ?? "").trim();
+    const departamentoLimpo = String(formData.get("departamento") ?? "").trim();
+
+    if (
+      !nomeLimpo ||
+      !dddLimpo ||
+      !numeroLimpo ||
+      !tipoLimpo ||
+      !departamentoLimpo
+    ) {
+      setError("Todos os campos sao obrigatorios.");
+      return;
+    }
+
+    if (
+      dddLimpo.length !== 2 ||
+      numeroLimpo.length < 8 ||
+      numeroLimpo.length > 9
+    ) {
+      setError("Informe DDD e numero validos.");
+      return;
+    }
+
+    const departamentoFormatado =
+      departamentoLimpo.length <= 4
+        ? departamentoLimpo.toUpperCase()
+        : departamentoLimpo;
+
+    try {
+      setSubmitting(true);
+      setError("");
+
+      const contatoPayload = {
+        nome: nomeLimpo,
+        telefone: `+55${dddLimpo}${numeroLimpo}`,
+        tipo: tipoLimpo,
+        departamento: departamentoFormatado,
+      };
+
+      if (editingId) {
+        const updated = await updateContact(editingId, contatoPayload);
+        if (!updated) return;
+
+        setNome("");
+        setDdd("");
+        setNumero("");
+        setTipo("");
+        setDepartmento("");
+        setEditingId(null);
+        setShowInput(false);
+
+        alert("Contato atualizado com sucesso!");
+        return;
+      }
+
+      const response = await createContact(contatoPayload);
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setError(
+          data.error || data.message || "Nao foi possivel realizar o cadastro.",
+        );
+        return;
+      }
+
+      if (data.contato) {
+        setContacts((prev) =>
+          [
+            ...prev.filter((contact) => contact.id !== data.contato.id),
+            data.contato,
+          ].sort((a, b) =>
+            String(a.nome || "").localeCompare(String(b.nome || "")),
+          ),
+        );
+      } else {
+        const contatosResponse = await fetchContacts();
+        const contatos = await contatosResponse.json().catch(() => []);
+        if (contatosResponse.ok) {
+          setContacts(Array.isArray(contatos) ? contatos : []);
+        }
+      }
+
+      setNome("");
+      setDdd("");
+      setNumero("");
+      setTipo("");
+      setDepartmento("");
+      setEditingId(null);
+      setShowInput(false);
+
+      alert("Contato adicionado com sucesso!");
+    } catch (err) {
+      console.error("Erro ao cadastrar contato:", err);
+      setError("Erro ao conectar ao servidor.");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -359,7 +611,7 @@ function Contatos() {
                 className="w-full bg-transparent text-sm font-bold text-[#2f2926] outline-none"
               >
                 <option value="todos">Todos os setores</option>
-                <option value={FAVORITES_FILTER} style={{ fontWeight: 'bold' }}>
+                <option value={FAVORITES_FILTER} style={{ fontWeight: "bold" }}>
                   Favoritos
                 </option>
                 {departments.map((item) => (
@@ -372,7 +624,7 @@ function Contatos() {
             {isAdmin && (
               <button
                 type="button"
-                onClick={() => setShowInput(!showInput)}
+                onClick={showInputs}
                 aria-label="Adicionar contato"
                 className={`flex h-12 w-12 items-center justify-center rounded-md border border-black/10 bg-white/85 text-[#B95758] shadow-sm backdrop-blur transition hover:bg-white hover:text-[#9f3f40] ${
                   showInput ? "ring-2 ring-[#B95758]/30" : ""
@@ -387,8 +639,11 @@ function Contatos() {
           <div className="flex flex-col gap-3">
             {showInput && (
               <section className="rounded-md border border-black/10 border-l-4 border-l-[#B95758] bg-white/90 p-4 shadow-sm backdrop-blur">
-                <form className="grid gap-3 md:grid-cols-2 xl:grid-cols-4" onSubmit={onSubmit}>
-                  <label className="flex min-w-0 flex-col gap-1 text-sm font-semibold text-[#403936]">
+                <form
+                  className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.2fr_132px_1fr_1fr_1fr_auto] xl:items-end"
+                  onSubmit={onSubmit}
+                >
+                  <label className="flex min-w-0 flex-col gap-1 text-sm font-semibold text-[#928884]">
                     Nome
                     <span className="rounded-md border border-black/10 bg-white shadow-sm">
                       <Input
@@ -401,13 +656,36 @@ function Contatos() {
                   </label>
 
                   <label className="flex min-w-0 flex-col gap-1 text-sm font-semibold text-[#403936]">
-                    Telefone
+                    DDD
+                    <span className="flex rounded-md border border-black/10 bg-white shadow-sm">
+                      <span className="flex min-h-11 items-center border-r border-black/10 px-3 text-sm font-bold text-[#B95758]">
+                        +55
+                      </span>
+                      <Input
+                        name="ddd"
+                        placeholder="81"
+                        value={ddd}
+                        maxLength={2}
+                        inputMode="numeric"
+                        onChange={(e) =>
+                          setDdd(e.target.value.replace(/\D/g, ""))
+                        }
+                      />
+                    </span>
+                  </label>
+
+                  <label className="flex min-w-0 flex-col gap-1 text-sm font-semibold text-[#403936]">
+                    Numero
                     <span className="rounded-md border border-black/10 bg-white shadow-sm">
                       <Input
-                        name="telefone"
-                        placeholder="+55 (81) 99999-9999"
-                        value={telefone}
-                        onChange={(e) => setTelefone(e.target.value)}
+                        name="numero"
+                        placeholder="99999-9999"
+                        value={numero}
+                        maxLength={9}
+                        inputMode="numeric"
+                        onChange={(e) =>
+                          setNumero(e.target.value.replace(/\D/g, ""))
+                        }
                       />
                     </span>
                   </label>
@@ -435,6 +713,24 @@ function Contatos() {
                       />
                     </span>
                   </label>
+
+                  {!editingId ? (
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="flex min-h-11 w-full items-center justify-center rounded-md bg-[#B95758] px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-[#9f3f40] disabled:cursor-not-allowed disabled:opacity-70 md:col-span-2 xl:col-span-1 xl:w-auto xl:whitespace-nowrap"
+                    >
+                      {submitting ? "Cadastrando..." : "Cadastrar novo contato"}
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="flex min-h-11 w-full items-center justify-center rounded-md bg-[#B95758] px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-[#9f3f40] disabled:cursor-not-allowed disabled:opacity-70 md:col-span-2 xl:col-span-1 xl:w-auto xl:whitespace-nowrap"
+                    >
+                      {submitting ? "Atualizando..." : "Atualizar o contato"}
+                    </button>
+                  )}
                 </form>
               </section>
             )}
@@ -490,10 +786,10 @@ function Contatos() {
                     <button
                       type="button"
                       onClick={() => toggleFavorito(contact.id)}
-                      className={`flex h-11 w-11 items-center justify-center rounded-md transition ${
+                      className={`flex h-11 w-11 items-center justify-center rounded-full transition ${
                         favoritos.includes(String(contact.id))
-                          ? "bg-[#B95758] text-white hover:bg-[#9f3f40]"
-                          : "text-[#B95758] hover:bg-[#f6efe9]"
+                          ? "bg-[#F0F0E9] text-white hover:bg-[#da3033] hover:text-white"
+                          : "text-[#B95758] hover:bg-[#da3033] hover:text-white"
                       }`}
                       aria-label={
                         favoritos.includes(String(contact.id))
@@ -506,7 +802,7 @@ function Contatos() {
                           : "Favoritar"
                       }
                     >
-                      <Icon
+                      <HeartPlus
                         name="heart"
                         className="h-6 w-6"
                         fill={
@@ -521,7 +817,7 @@ function Contatos() {
                       href={getWhatsappLink(contact.telefone)}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex h-11 w-11 items-center justify-center rounded-md text-[#3d7773] transition hover:bg-[#f6efe9]"
+                      className="flex h-11 w-11 items-center justify-center rounded-full text-[#074417] transition hover:bg-[#da3033] hover:text-white"
                       aria-label={`Abrir WhatsApp de ${contact.nome}`}
                     >
                       <Icon name="messageCircle" className="h-6 w-6" />
@@ -530,7 +826,7 @@ function Contatos() {
                     <button
                       type="button"
                       onClick={() => handleCopy(contact)}
-                      className="flex h-11 w-11 items-center justify-center rounded-md bg-[#B95758] text-white transition hover:bg-[#9f3f40]"
+                      className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F0F0E9] text-yellow-700 transition hover:bg-[#da3033] hover:text-white"
                       aria-label={`Copiar telefone de ${contact.nome}`}
                       title={copiedId === contact.id ? "Copiado" : "Copiar"}
                     >
@@ -539,6 +835,29 @@ function Contatos() {
                         className="h-5 w-5"
                       />
                     </button>
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        onClick={() => deleteContact(contact.id)}
+                        className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F0F0E9] text-red-500 transition hover:bg-[#da3033] hover:text-white"
+                        aria-label={`Deletar contato de ${contact.nome}`}
+                        title="Deletar"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    )}
+
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        onClick={() => editContact(contact)}
+                        className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F0F0E9] text-yellow-700 transition hover:bg-[#da3033] hover:text-white"
+                        aria-label={`Editar contato de ${contact.nome}`}
+                        title="Editar"
+                      >
+                        <SquarePen className="h-5 w-5" />
+                      </button>
+                    )}
                   </div>
                 </article>
               ))}
@@ -547,7 +866,7 @@ function Contatos() {
           {/* Paginacao local para manter 10 contatos por pagina como nas figuras. */}
           {!loading && !error && filteredContacts.length > 0 && (
             <footer className="flex flex-col gap-3 pt-3 text-sm font-bold text-[#ffffff] md:flex-row md:items-center md:justify-between">
-              <span className="text-[#ffffff] text-sm font-bold">
+              <span className="text-[#000000] text-sm font-bold">
                 Mostrando {(currentPage - 1) * PAGE_SIZE + 1}-
                 {Math.min(currentPage * PAGE_SIZE, filteredContacts.length)} de{" "}
                 {filteredContacts.length} contatos

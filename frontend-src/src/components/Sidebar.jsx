@@ -1,6 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Icon from "./Icon";
+import { useUsuario } from "../contexts/UsuarioContext";
+import { CertificateButton } from "./Certificate";
+
 
 const Sidebar = ({
   showButton = true,
@@ -12,10 +15,94 @@ const Sidebar = ({
   const navigate = useNavigate();
   const { id } = useParams();
   const location = useLocation();
+  const { usuario, nomeCompleto, atualizarUsuario } = useUsuario();
   const [moduloAberto, setModuloAberto] = useState(null);
   const [sidebarWidth, setSidebarWidth] = useState(300);
   const [isResizing, setIsResizing] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isUserSessionChecked, setIsUserSessionChecked] = useState(false);
+  const [videosLength, setVideosLength] = useState(0);
+  const [cursoNome, setCursoNome] = useState("");
+  const [, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+
+    setIsUserSessionChecked(false);
+    fetch("/api/remember-session", { credentials: "include" })
+      .then((response) => response.json())
+      .then((data) => {
+        if (active && data?.authenticated && data?.nomeCompleto) {
+          atualizarUsuario(data);
+        }
+      })
+      .catch((error) => console.log(error))
+      .finally(() => {
+        if (active) setIsUserSessionChecked(true);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [atualizarUsuario]);
+
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchVideosLength = async () => {
+      try {
+        const cursoId = encodeURIComponent(String(id));
+        const response = await fetch(`/api/videos/length/${cursoId}`, {
+          credentials: "include",
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          setError(
+            data.error || data.message || "Nao foi possivel consultar os videos.",
+          );
+          return;
+        }
+
+        setVideosLength(Number(data) || 0);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    const fetchCourseName = async () => {
+      try {
+        const cursoId = encodeURIComponent(String(id));
+        const response = await fetch(`/api/cursos/${cursoId}`, {
+          credentials: "include",
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          setError(
+            data.error || data.message || "Nao foi possivel localizar o curso.",
+          );
+          return;
+        }
+
+        const nome =
+          typeof data === "string"
+            ? data
+            : Array.isArray(data)
+              ? data[0]?.titulo
+              : data?.titulo;
+
+        setCursoNome(nome || "");
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    fetchVideosLength();
+    fetchCourseName();
+  }, [id]);
 
   useEffect(() => {
     if (!isResizing) return;
@@ -32,6 +119,41 @@ const Sidebar = ({
       window.removeEventListener("mouseup", stop);
     };
   }, [isResizing]);
+
+  const currentCourseVideos = useMemo(() => {
+    if (modulos.length) {
+      return modulos.flatMap((modulo) => modulo.videos || []);
+    }
+
+    return videos;
+  }, [modulos, videos]);
+
+  const watchedVideosCount = useMemo(
+    () => currentCourseVideos.filter((video) => watchedVideos[video.id]).length,
+    [currentCourseVideos, watchedVideos],
+  );
+
+  const totalVideos = Number(videosLength) || currentCourseVideos.length;
+  const canDownloadCertificate =
+    totalVideos > 0 && watchedVideosCount === totalVideos;
+
+  const certificateStudentName = useMemo(() => {
+    const username = String(usuario?.username || "").trim();
+    const fullName = String(nomeCompleto || usuario?.nomeCompleto || "").trim();
+
+    if (fullName && fullName.toLowerCase() !== username.toLowerCase()) {
+      return fullName;
+    }
+
+    const fallbackName = username || fullName;
+
+    return fallbackName
+      .split("@")[0]
+      .replace(/[._-]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/\b\p{L}/gu, (letter) => letter.toUpperCase());
+  }, [nomeCompleto, usuario]);
 
   const closeAnd = (action) => {
     setIsMobileOpen(false);
@@ -63,20 +185,17 @@ const Sidebar = ({
 
   const VideoItem = ({ video }) => {
     const watched = watchedVideos[video.id];
-
     return (
       <li
         onClick={() => selectVideo(video)}
-        className={`flex cursor-pointer items-start gap-3 rounded-md px-1 py-1 transition ${
-          watched ? "text-green-300" : "hover:text-yellow-200"
-        }`}
+        className={`flex cursor-pointer items-start gap-3 rounded-md px-1 py-1 transition ${watched ? "text-green-300" : "hover:text-yellow-200"
+          }`}
         title={video.titulo || video.descricao}
       >
         <Icon
           name="check"
-          className={`h-[18px] w-[18px] shrink-0 ${
-            watched ? "text-green-400" : "text-white"
-          }`}
+          className={`h-[18px] w-[18px] shrink-0 ${watched ? "text-green-400" : "text-white"
+            }`}
         />
         <span className="min-w-0 flex-1 break-words leading-tight">
           {video.titulo || video.descricao}
@@ -100,9 +219,8 @@ const Sidebar = ({
               <span className="min-w-0 flex-1 truncate">{modulo.titulo}</span>
               <Icon
                 name="right"
-                className={`h-4 w-4 shrink-0 transition-transform ${
-                  moduloAberto === modulo.id ? "rotate-90" : ""
-                }`}
+                className={`h-4 w-4 shrink-0 transition-transform ${moduloAberto === modulo.id ? "rotate-90" : ""
+                  }`}
               />
             </button>
 
@@ -153,6 +271,12 @@ const Sidebar = ({
         </div>
 
         <NavigationList />
+        {canDownloadCertificate && isUserSessionChecked && (
+          <CertificateButton
+            studentName={certificateStudentName}
+            courseName={cursoNome}
+          />
+        )}
         <MaterialButton />
 
         <div
@@ -190,6 +314,14 @@ const Sidebar = ({
           <div className="border-t border-white/20 px-4 pb-4">
             <div className="custom-scrollbar max-h-[calc(100vh-5rem)] overflow-y-auto pt-4">
               <NavigationList />
+
+              {canDownloadCertificate && isUserSessionChecked && (
+                <CertificateButton
+                  studentName={certificateStudentName}
+                  courseName={cursoNome}
+                  className="mt-5"
+                />
+              )}
               <MaterialButton className="mt-5" />
             </div>
           </div>

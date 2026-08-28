@@ -35,6 +35,7 @@ export const UsuarioProvider = ({ children }) => {
       usuario,
       atualizarUsuario,
       limparUsuario,
+      nomeCompleto: usuario.nomeCompleto,
       isAdmin: usuario.isAdmin,
     }),
     [atualizarUsuario, limparUsuario, usuario],

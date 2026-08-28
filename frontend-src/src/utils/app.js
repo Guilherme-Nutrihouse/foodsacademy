@@ -1,4 +1,5 @@
 const USERNAME_STORAGE_KEY = "username";
+const FULL_NAME_STORAGE_KEY = "nomeCompleto";
 const IS_ADMIN_STORAGE_KEY = "isAdmin";
 
 const hasOwn = (data, key) =>
@@ -35,20 +36,45 @@ export function getStoredUsername() {
   return localStorage.getItem(USERNAME_STORAGE_KEY) || "Usuario";
 }
 
+export function getStoredNomeCompleto() {
+  return localStorage.getItem(FULL_NAME_STORAGE_KEY) || "";
+}
+
 export function getStoredIsAdmin() {
   return toBoolean(localStorage.getItem(IS_ADMIN_STORAGE_KEY));
 }
 
 export function getStoredUser() {
+  const username = getStoredUsername();
+  const nomeCompleto = getStoredNomeCompleto();
+
   return {
-    username: getStoredUsername(),
+    username,
+    nomeCompleto: nomeCompleto || username,
     isAdmin: getStoredIsAdmin(),
   };
 }
 
 export function saveStoredSession(data = {}) {
+  const username = data.username ? String(data.username).trim() : "";
+
   if (data.username) {
-    localStorage.setItem(USERNAME_STORAGE_KEY, data.username);
+    localStorage.setItem(USERNAME_STORAGE_KEY, username);
+  }
+
+  const hasFullName =
+    hasOwn(data, "nomeCompleto") ||
+    hasOwn(data, "fullName") ||
+    hasOwn(data, "displayName");
+  const nomeCompleto = String(
+    data.nomeCompleto || data.fullName || data.displayName || "",
+  ).trim();
+
+  if (hasFullName) {
+    if (nomeCompleto) localStorage.setItem(FULL_NAME_STORAGE_KEY, nomeCompleto);
+    else localStorage.removeItem(FULL_NAME_STORAGE_KEY);
+  } else if (username) {
+    localStorage.removeItem(FULL_NAME_STORAGE_KEY);
   }
 
   if (hasOwn(data, "isAdmin")) {
@@ -58,6 +84,7 @@ export function saveStoredSession(data = {}) {
 
 export function clearStoredSession() {
   localStorage.removeItem(USERNAME_STORAGE_KEY);
+  localStorage.removeItem(FULL_NAME_STORAGE_KEY);
   localStorage.removeItem(IS_ADMIN_STORAGE_KEY);
 }
 

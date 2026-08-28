@@ -46,11 +46,14 @@ function validarEFormatarContato(data = {}) {
   const tipo = validarTextoObrigatorio(data.tipo, "Tipo");
   const departamento = validarTextoObrigatorio(data.departamento, "Departamento");
 
+  const departamentoFormatado =
+    departamento.length <= 4 ? departamento.toUpperCase() : formatarIniciais(departamento);
+
   return {
     nome: formatarIniciais(nome),
     telefone: formatarTelefoneBR(telefone),
     tipo: formatarIniciais(tipo),
-    departamento: formatarIniciais(departamento),
+    departamento: departamentoFormatado,
   };
 }
 

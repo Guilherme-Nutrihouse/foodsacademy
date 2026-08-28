@@ -59,8 +59,15 @@ const signaturesMatch = (expected, received = '') => {
   return left.length === right.length && crypto.timingSafeEqual(left, right);
 };
 
-const createRememberSessionToken = (username) => {
-  const payload = b64(JSON.stringify({ username, exp: Date.now() + getMaxAgeMs() }));
+const createRememberSessionToken = (username, isAdmin = false, nomeCompleto = '') => {
+  const payload = b64(
+    JSON.stringify({
+      username,
+      nomeCompleto,
+      isAdmin: isAdmin === true,
+      exp: Date.now() + getMaxAgeMs(),
+    })
+  );
   return `${payload}.${sign(payload)}`;
 };
 
@@ -69,12 +76,17 @@ const verifyRememberSessionToken = (token) => {
   if (!payload || !signature || !signaturesMatch(sign(payload), signature)) return null;
 
   try {
-    const { username, exp } = JSON.parse(fromB64(payload));
+    const { username, nomeCompleto, isAdmin, exp } = JSON.parse(fromB64(payload));
     return typeof username === 'string' &&
       username.trim() &&
       typeof exp === 'number' &&
       exp > Date.now()
-      ? username.trim()
+      ? {
+          username: username.trim(),
+          nomeCompleto:
+            typeof nomeCompleto === 'string' ? nomeCompleto.trim() : '',
+          isAdmin: isAdmin === true,
+        }
       : null;
   } catch {
     return null;
@@ -91,25 +103,37 @@ const getCookieValue = (req, name) => {
 };
 
 // Cria cookie de sessao: persistente apenas quando o usuario marcar "lembrar".
-const setRememberSessionCookie = (req, res, username, remember = false) =>
+const setRememberSessionCookie = (
+  req,
+  res,
+  username,
+  remember = false,
+  isAdmin = false,
+  nomeCompleto = ''
+) =>
   res.cookie(
     COOKIE_NAME,
-    createRememberSessionToken(username),
+    createRememberSessionToken(username, isAdmin, nomeCompleto),
     getCookieOptions(req, remember ? getMaxAgeMs() : null)
   );
 
 const clearRememberSessionCookie = (req, res) =>
   res.clearCookie(COOKIE_NAME, getCookieOptions(req));
 
-const getRememberedUsername = (req) =>
+const getRememberedSession = (req) =>
   verifyRememberSessionToken(getCookieValue(req, COOKIE_NAME));
 
+const getRememberedUsername = (req) => getRememberedSession(req)?.username || null;
+
 // Nome explicito para validar qualquer sessao autenticada no middleware.
+const getAuthenticatedSession = getRememberedSession;
 const getAuthenticatedUsername = getRememberedUsername;
 
 module.exports = {
   clearRememberSessionCookie,
+  getAuthenticatedSession,
   getAuthenticatedUsername,
+  getRememberedSession,
   getRememberedUsername,
   setRememberSessionCookie,
 };

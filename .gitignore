@@ -9,3 +9,5 @@ docs
 frontend/*
 !frontend/package.json
 videos_cursos
+
+node_modules/

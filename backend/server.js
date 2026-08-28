@@ -16,6 +16,7 @@ const authRoutes = require("./routes/authRoutes");
 const protectedRoutes = [
   require("./routes/cursosRoutes"),
   require("./routes/videosRoutes"),
+  require("./routes/materiaisRoutes"),
   require("./routes/contatosRoutes"), // Protege contatos pelo mesmo fluxo autenticado das APIs internas.
 ];
 

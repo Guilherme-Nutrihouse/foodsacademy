@@ -4,14 +4,21 @@ const ldap = require("ldapjs");
 const { logError, logInfo, logWarn } = require("../security");
 const {
   clearRememberSessionCookie,
-  getAuthenticatedUsername,
+  getAuthenticatedSession,
   setRememberSessionCookie,
 } = require("../services/rememberSessionService");
 
 const router = express.Router();
 const LDAP_URL = process.env.LDAP_URL;
-// Busca apenas os grupos LDAP usados para calcular permissao administrativa.
-const LDAP_USER_ATTRIBUTES = ["memberOf"];
+// Busca apenas atributos seguros usados no perfil e na permissao administrativa.
+const LDAP_USER_ATTRIBUTES = [
+  "memberOf",
+  "displayName",
+  "cn",
+  "name",
+  "givenName",
+  "sn",
+];
 // Permite liberar admins somente por grupos declarados em LDAP_ADMIN_GROUPS.
 const ADMIN_GROUP_NAMES = String(process.env.LDAP_ADMIN_GROUPS || "")
   .split(",")
@@ -26,12 +33,18 @@ router.get("/authenticate", (req, res) =>
 );
 
 router.get("/remember-session", (req, res) => {
-  const username = getAuthenticatedUsername(req);
-  if (!username)
+  const session = getAuthenticatedSession(req);
+  if (!session)
     return res.status(401).json({ authenticated: false, remembered: false });
 
-  logInfo("Sessao autenticada validada", { username });
-  res.status(200).json({ authenticated: true, remembered: true, username });
+  logInfo("Sessao autenticada validada", { username: session.username });
+  res.status(200).json({
+    authenticated: true,
+    remembered: true,
+    username: session.username,
+    nomeCompleto: session.nomeCompleto || "",
+    isAdmin: session.isAdmin,
+  });
 });
 
 router.post("/logout", (req, res) => {
@@ -85,19 +98,42 @@ const getAttributeValues = (values) =>
     )
     .filter(Boolean);
 
-// Extrai somente memberOf, sem devolver o objeto LDAP completo.
-const mapLdapUserAttributes = (entry) =>
-  (entry?.pojo?.attributes || entry?.attributes || []).reduce(
+const getFirstAttributeValue = (values) => getAttributeValues(values)[0] || "";
+
+const getFullName = (user) =>
+  [
+    user.displayName,
+    user.name,
+    user.cn,
+    [user.givenName, user.sn].filter(Boolean).join(" "),
+  ]
+    .map((value) => String(value || "").trim())
+    .find(Boolean) || "";
+
+// Extrai somente atributos seguros, sem devolver o objeto LDAP completo.
+const mapLdapUserAttributes = (entry) => {
+  const ldapUser = (entry?.pojo?.attributes || entry?.attributes || []).reduce(
     (user, attr) => {
       const { type, values } = attr.pojo || attr;
       const key = String(type || "").toLowerCase();
 
       if (key === "memberof") user.memberOf = getAttributeValues(values);
+      if (key === "displayname") user.displayName = getFirstAttributeValue(values);
+      if (key === "cn") user.cn = getFirstAttributeValue(values);
+      if (key === "name") user.name = getFirstAttributeValue(values);
+      if (key === "givenname") user.givenName = getFirstAttributeValue(values);
+      if (key === "sn") user.sn = getFirstAttributeValue(values);
 
       return user;
     },
     { memberOf: [] },
   );
+
+  return {
+    memberOf: ldapUser.memberOf,
+    nomeCompleto: getFullName(ldapUser),
+  };
+};
 
 // Calcula permissao administrativa apenas pelos grupos LDAP do usuario.
 const isLdapAdmin = (ldapUser) => {
@@ -116,7 +152,7 @@ const getLdapUserAttributes = (client, userDN) =>
     const baseDN = getLdapBaseDN(userDN);
     const username = String(userDN).split("@")[0];
 
-    if (!baseDN || !username) return resolve({ memberOf: [] });
+    if (!baseDN || !username) return resolve({ memberOf: [], nomeCompleto: "" });
 
     const filter = `(|(userPrincipalName=${escapeLdapFilterValue(userDN)})(sAMAccountName=${escapeLdapFilterValue(username)}))`;
     const options = {
@@ -125,7 +161,7 @@ const getLdapUserAttributes = (client, userDN) =>
       sizeLimit: 1,
       attributes: LDAP_USER_ATTRIBUTES,
     };
-    let ldapUser = { memberOf: [] };
+    let ldapUser = { memberOf: [], nomeCompleto: "" };
     let done = false;
 
     const finish = (user) => {
@@ -153,7 +189,7 @@ const getLdapUserAttributes = (client, userDN) =>
             userDN,
             reason: searchErr.message,
           });
-          finish({ memberOf: [] });
+          finish({ memberOf: [], nomeCompleto: "" });
         });
         searchRes.on("end", () => finish(ldapUser));
       });
@@ -220,12 +256,21 @@ router.post("/authenticate", async (req, res) => {
   // Calcula se o usuario deve enxergar recursos administrativos.
   const isAdmin = isLdapAdmin(ldapUser);
   // Emite sessao assinada para toda autenticacao LDAP valida.
-  setRememberSessionCookie(req, res, username, rememberLogin === true);
+  const nomeCompleto = ldapUser.nomeCompleto || "";
+  setRememberSessionCookie(
+    req,
+    res,
+    username,
+    rememberLogin === true,
+    isAdmin,
+    nomeCompleto,
+  );
 
   logInfo("Usuario autenticado", { username, isAdmin });
   res.json({
     message: "Autentica\u00e7\u00e3o bem-sucedida",
     username,
+    nomeCompleto,
     isAdmin,
   });
 });
