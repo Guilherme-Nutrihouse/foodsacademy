@@ -3,7 +3,7 @@ const fs = require('fs');
 const multer = require('multer');
 const path = require('path');
 
-const { query, sql } = require('../db'); // Necessario para consultar o SQL Server.
+const { query, sql } = require('../db');
 const asyncRoute = require('./asyncRoute');
 
 const router = express.Router();
@@ -12,11 +12,11 @@ const publicRootDir = path.join(__dirname, '..', '..');
 const frontendPublicDir = path.join(publicRootDir, 'frontend');
 const frontendSrcPublicDir = path.join(publicRootDir, 'frontend-src', 'public');
 const videosCursosDir = path.join(publicRootDir, 'videos_cursos');
-const MAX_PDF_SIZE = 25 * 1024 * 1024;
+const MAX_MP4_SIZE = 1048576;
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: MAX_PDF_SIZE },
+  limits: { fileSize: MAX_MP4_SIZE },
 });
 
 const requireAdmin = (req, res, next) => {

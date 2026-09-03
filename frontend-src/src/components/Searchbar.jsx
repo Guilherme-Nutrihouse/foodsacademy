@@ -2,6 +2,7 @@ import React from "react";
 import Icon from "./Icon";
 
 const SearchBar = ({ value = "", onChange = () => {}, className = "" }) => {
+
   const handleKeyDown = (e) => {
     if (e.key === "Escape") {
       onChange("");

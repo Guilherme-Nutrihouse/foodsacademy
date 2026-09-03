@@ -17,7 +17,7 @@ function formatarIniciais(texto) {
     .toLowerCase()
     .split(/\s+/)
     .map((palavra) => {
-      // Mantem conectores comuns em minusculo.
+
       if (/^(de|da|do|dos|das|e)$/.test(palavra)) return palavra;
       return palavra.charAt(0).toUpperCase() + palavra.slice(1);
     })

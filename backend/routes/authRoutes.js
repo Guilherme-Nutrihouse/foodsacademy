@@ -10,7 +10,7 @@ const {
 
 const router = express.Router();
 const LDAP_URL = process.env.LDAP_URL;
-// Busca apenas atributos seguros usados no perfil e na permissao administrativa.
+
 const LDAP_USER_ATTRIBUTES = [
   "memberOf",
   "displayName",
@@ -19,7 +19,7 @@ const LDAP_USER_ATTRIBUTES = [
   "givenName",
   "sn",
 ];
-// Permite liberar admins somente por grupos declarados em LDAP_ADMIN_GROUPS.
+
 const ADMIN_GROUP_NAMES = String(process.env.LDAP_ADMIN_GROUPS || "")
   .split(",")
   .map((value) => value.trim().toLowerCase())
@@ -62,7 +62,6 @@ const closeLdap = (client) => {
   }
 };
 
-// Usa LDAP_BASE_DN quando existir; caso contrario deriva o base DN pelo dominio do login.
 const getLdapBaseDN = (userDN) => {
   const configuredBaseDN = String(process.env.LDAP_BASE_DN || "").trim();
   if (configuredBaseDN) return configuredBaseDN;
@@ -75,7 +74,6 @@ const getLdapBaseDN = (userDN) => {
     .join(",");
 };
 
-// Escapa valores usados no filtro LDAP para evitar caracteres especiais na busca.
 const escapeLdapFilterValue = (value) =>
   String(value).replace(/[\0()*\\]/g, (char) => {
     const escaped = {
@@ -88,8 +86,6 @@ const escapeLdapFilterValue = (value) =>
     return escaped[char] || char;
   });
 
-
-// Normaliza atributos LDAP multivalorados, como memberOf.
 const getAttributeValues = (values) =>
   (Array.isArray(values) ? values : [values])
     .filter((value) => value !== undefined && value !== null)
@@ -110,7 +106,6 @@ const getFullName = (user) =>
     .map((value) => String(value || "").trim())
     .find(Boolean) || "";
 
-// Extrai somente atributos seguros, sem devolver o objeto LDAP completo.
 const mapLdapUserAttributes = (entry) => {
   const ldapUser = (entry?.pojo?.attributes || entry?.attributes || []).reduce(
     (user, attr) => {
@@ -135,7 +130,6 @@ const mapLdapUserAttributes = (entry) => {
   };
 };
 
-// Calcula permissao administrativa apenas pelos grupos LDAP do usuario.
 const isLdapAdmin = (ldapUser) => {
   const groups = (Array.isArray(ldapUser.memberOf) ? ldapUser.memberOf : []).map((group) =>
     String(group || "").toLowerCase(),
@@ -146,7 +140,6 @@ const isLdapAdmin = (ldapUser) => {
   );
 };
 
-// Busca atributos do usuario usando a conexao ja autenticada no LDAP.
 const getLdapUserAttributes = (client, userDN) =>
   new Promise((resolve) => {
     const baseDN = getLdapBaseDN(userDN);
@@ -170,7 +163,6 @@ const getLdapUserAttributes = (client, userDN) =>
       resolve(user);
     };
 
-    // Mantem login valido mesmo se a busca de atributos falhar.
     try {
       client.search(baseDN, options, (err, searchRes) => {
         if (err) {
@@ -229,7 +221,6 @@ const ldapAuth = (userDN, password) =>
 
       if (err) return finish(null);
 
-      // Retorna apenas atributos seguros depois que o bind LDAP confirma as credenciais.
       finish(await getLdapUserAttributes(client, userDN));
     });
   });
@@ -253,9 +244,9 @@ router.post("/authenticate", async (req, res) => {
   }
 
   const username = normalizedUserDN.split("@")[0];
-  // Calcula se o usuario deve enxergar recursos administrativos.
+
   const isAdmin = isLdapAdmin(ldapUser);
-  // Emite sessao assinada para toda autenticacao LDAP valida.
+
   const nomeCompleto = ldapUser.nomeCompleto || "";
   setRememberSessionCookie(
     req,

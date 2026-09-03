@@ -14,6 +14,7 @@ import {
 const UsuarioContext = createContext(null);
 
 export const UsuarioProvider = ({ children }) => {
+
   const [usuario, setUsuario] = useState(getStoredUser);
 
   const atualizarUsuario = useCallback((data = {}) => {

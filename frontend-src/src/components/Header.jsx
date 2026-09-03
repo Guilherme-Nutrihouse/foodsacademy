@@ -9,8 +9,6 @@ import SearchBar from "./Searchbar.jsx";
 import { CirclePlus, Upload } from "lucide-react";
 import Input from "./Input";
 
-
-
 const navLinks = [
   ["CURSOS", "/home"],
   ["SOBRE", "/sobre"],
@@ -33,6 +31,7 @@ const Header = ({ username: usernameProp, search, setSearch }) => {
   const navigate = useNavigate();
   const { usuario, limparUsuario, isAdmin } = useUsuario();
   const username = usernameProp || usuario.nomeCompleto || usuario.username;
+
   const isActive = (path) => location.pathname === path;
 
   useEffect(() => {
@@ -50,7 +49,7 @@ const Header = ({ username: usernameProp, search, setSearch }) => {
     try {
       await fetch("/api/logout", { method: "POST", credentials: "include" });
     } catch {
-      /* segue com logout local */
+
     }
 
     limparUsuario();
@@ -116,7 +115,7 @@ const Header = ({ username: usernameProp, search, setSearch }) => {
       setUploadSuccess(data.message || "Curso criado com sucesso.");
       setShowInput(false);
       alert("Curso adicionado com sucesso!");
-    
+
     } catch (err) {
       console.error("Erro ao cadastrar curso:", err);
       setError("Erro ao conectar ao servidor.");
@@ -240,7 +239,7 @@ const Header = ({ username: usernameProp, search, setSearch }) => {
                 <span className="rounded-md border border-black/10 bg-white shadow-sm">
                   <Input
                     name="nome"
-                    placeholder="Nome do Curso"
+                    placeholder="Ex: TecFood - "
                     value={titulo}
                     onChange={(e) => {
                       setTitulo(e.target.value);

@@ -1,6 +1,5 @@
 const { getAuthenticatedSession } = require('../services/rememberSessionService');
 
-// Bloqueia APIs internas quando nao existe sessao assinada emitida pelo login LDAP.
 const requireAuth = (req, res, next) => {
   const session = getAuthenticatedSession(req);
 

@@ -1,11 +1,8 @@
-
-
-
 const express = require('express');
-const path = require('path'); // Necessario para montar URLs publicas de arquivos locais.
+const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
-const { query, sql } = require('../db'); // Necessario para consultar o SQL Server.
+const { query, sql } = require('../db');
 const asyncRoute = require('./asyncRoute');
 
 const router = express.Router();
@@ -128,7 +125,6 @@ const getUniqueFileName = async (directory, fileName) => {
   }
 };
 
-// Monta a URL publica do icone sem expor caminhos internos do banco.
 const withIcon = (curso) => ({
   ...curso,
   icon_url: curso.icon

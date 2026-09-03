@@ -11,7 +11,7 @@ const paths = {
   messageCircle: [
     "M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-4-.99L3 20l1.13-4.69A8.5 8.5 0 1 1 21 11.5z",
   ],
-  // Icone de coracao usado para marcar contatos favoritos.
+
   heart: [
     "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z",
   ],
@@ -36,7 +36,6 @@ const paths = {
   ],
 };
 
-// Permite preencher icones especificos, como favorito, sem adicionar nova dependencia.
 const Icon = ({
   name,
   className = "h-5 w-5",
@@ -53,6 +52,7 @@ const Icon = ({
     strokeLinecap="round"
     strokeLinejoin="round"
   >
+
     {paths[name].map((d) => (
       <path key={d} d={d} />
     ))}

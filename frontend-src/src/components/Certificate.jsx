@@ -26,6 +26,7 @@ const winAnsiSpecialChars = {
 
 const encodeWinAnsi = (value) => {
   const bytes = [];
+
   const text = String(value || "").normalize("NFC");
 
   for (const char of text) {
@@ -95,6 +96,7 @@ const measureTextWidth = (text, fontSize, font = "F1") => {
   context.font = `${weight} ${fontSize}px ${family}`;
   return context.measureText(String(text || "")).width;
 };
+
 const fitFontSize = (text, preferredSize, maxWidth, minSize = 12, font = "F1") => {
   let fontSize = preferredSize;
 
@@ -124,6 +126,7 @@ const rightText = (text, x, y, options = {}) => {
 };
 
 const wrapText = (text, maxCharacters) => {
+
   const words = String(text || "").trim().split(/\s+/).filter(Boolean);
   const lines = [];
   let currentLine = "";
@@ -211,6 +214,7 @@ const loadLogoImage = () => {
 };
 
 const textEncoder = new TextEncoder();
+
 const toBytes = (value) =>
   value instanceof Uint8Array ? value : textEncoder.encode(String(value));
 
@@ -273,7 +277,9 @@ const buildPdfDocument = ({ content, logoImage }) => {
 const createCertificatePdfBlob = ({ studentName, courseName, logoImage }) => {
   const safeStudentName = studentName || "Aluno";
   const safeCourseName = courseName || "Curso";
+
   const completionDate = new Date().toLocaleDateString("pt-BR", DATE_OPTIONS);
+
   const validationCode = window.crypto?.randomUUID?.() || `${Date.now()}`;
   const studentFontSize = fitFontSize(safeStudentName, 28, 700, 16, "F3");
   const courseLines = wrapText(safeCourseName, 54).slice(0, 2);
@@ -323,6 +329,7 @@ const createCertificatePdfBlob = ({ studentName, courseName, logoImage }) => {
 };
 
 const downloadBlob = (blob, fileName) => {
+
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
 

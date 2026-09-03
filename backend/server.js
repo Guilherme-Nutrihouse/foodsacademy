@@ -15,14 +15,15 @@ const requireAuth = require("./middleware/requireAuth");
 const authRoutes = require("./routes/authRoutes");
 const protectedRoutes = [
   require("./routes/cursosRoutes"),
+  require("./routes/modulosRoutes"),
   require("./routes/videosRoutes"),
   require("./routes/materiaisRoutes"),
-  require("./routes/contatosRoutes"), // Protege contatos pelo mesmo fluxo autenticado das APIs internas.
+  require("./routes/contatosRoutes"),
 ];
 
 const app = express();
 app.use("/api", compression({ threshold: "1kb" }));
-// Permite cache curto dos arquivos estaticos sem prender atualizacoes por muito tempo.
+
 const ONE_HOUR_MS = 60 * 60 * 1000;
 const ONE_DAY_MS = 24 * ONE_HOUR_MS;
 
@@ -30,13 +31,11 @@ const setStaticHeaders = (res) => {
   res.setHeader("Cache-Control", "public, max-age=3600");
 };
 
-// Permite ao navegador buscar trechos do MP4 e reaproveitar videos recentes em cache.
 const setVideoHeaders = (res) => {
   res.setHeader("Accept-Ranges", "bytes");
   res.setHeader("Cache-Control", "public, max-age=86400");
 };
 
-// Define opcoes por pasta sem alterar as rotas publicas ja usadas pelo front.
 const staticFolders = [
   {
     route: "/videos_cursos",
@@ -59,7 +58,7 @@ app.use(
   cors(buildCorsOptions()),
   express.json({ limit: process.env.JSON_LIMIT || "100kb" }),
 );
-// Mantem arquivos estaticos no fluxo anterior do front/IIS.
+
 staticFolders.forEach(({ route, folder, maxAge, setHeaders }) =>
   app.use(
     route,
@@ -74,7 +73,7 @@ staticFolders.forEach(({ route, folder, maxAge, setHeaders }) =>
   ),
 );
 app.use("/api", authRoutes);
-// Protege APIs internas contra acesso direto por link compartilhado.
+
 protectedRoutes.forEach((route) => app.use("/api", requireAuth, route));
 
 app.use((err, req, res, next) => {

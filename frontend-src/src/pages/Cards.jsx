@@ -19,17 +19,19 @@ const Cards = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [searchParams] = useSearchParams();
+
   const activeCollection = getCourseCollection(searchParams.get("collection"));
 
   useEffect(() => {
     fetchJson("/api/cursos")
-      // Evita quebrar filtros quando a API falhar ou mudar o formato da resposta.
+
       .then((data) => setCursos(asArray(data).map(withCourseIcon)))
       .catch((error) => console.error("Erro ao carregar cursos:", error))
       .finally(() => setLoading(false));
   }, []);
 
   const q = normalizeCourseText(search.trim());
+
   const cursosBase = activeCollection
     ? cursos.filter((curso) =>
         courseStartsWithPrefix(curso, activeCollection.prefix),
@@ -57,7 +59,7 @@ const Cards = () => {
 
       <section
         className="relative flex w-full flex-1 flex-col items-center px-4 py-8 sm:px-6 lg:px-8"
-        // Aplica o mesmo fundo usado na Home na area dos cards.
+
         style={{
           backgroundImage: `url(${backgroundImage})`,
           backgroundPosition: "bottom",
@@ -70,7 +72,6 @@ const Cards = () => {
           {activeCollection ? activeCollection.title : "Todos os Cursos"}
         </h1>
 
-        {/* Centraliza poucos cards e mantem a quebra em linhas para listas maiores. */}
         <div className="mt-6 flex w-full max-w-screen-xl flex-wrap justify-center gap-5">
           {cursosFiltrados.map((curso) => (
             <CarouselCard key={curso.id} {...curso} title={curso.titulo} />

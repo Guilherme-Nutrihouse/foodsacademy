@@ -1,6 +1,6 @@
 const express = require("express");
 
-const { query, sql } = require("../db"); // Necessario para consultar o SQL Server.
+const { query, sql } = require("../db");
 const { validarEFormatarContato } = require("../utils/validarEFormatarContato");
 const asyncRoute = require("./asyncRoute");
 
@@ -59,11 +59,11 @@ router.delete(
   asyncRoute("Erro ao deletar contato", async (req, res) => {
    try {
      const id = Number(req.params.id);
- 
+
      if (!Number.isInteger(id)) {
        return res.status(400).json({ error: "ID inválido." });
      }
- 
+
      const [contatoDeletado] = await query(
        `DELETE FROM contatos
         OUTPUT DELETED.id, DELETED.nome, DELETED.telefone, DELETED.tipo, DELETED.departamento, DELETED.data_criacao
@@ -72,11 +72,11 @@ router.delete(
          id: [sql.Int, id],
        },
      );
- 
+
      if (!contatoDeletado) {
        return res.status(404).json({ error: "Contato não encontrado." });
      }
- 
+
      res.json({
        message: "Contato deletado com sucesso.",
        contato: contatoDeletado,
@@ -84,7 +84,7 @@ router.delete(
    } catch (error) {
     console.log(error)
    }
-  
+
 }));
 
 router.put(

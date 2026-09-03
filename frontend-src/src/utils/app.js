@@ -5,12 +5,13 @@ const IS_ADMIN_STORAGE_KEY = "isAdmin";
 const hasOwn = (data, key) =>
   data !== null &&
   data !== undefined &&
+
   Object.prototype.hasOwnProperty.call(data, key);
 
 const toBoolean = (value) =>
+
   value === true || String(value).trim().toLowerCase() === "true";
 
-// Centraliza leituras JSON para manter as telas internas com o mesmo tratamento de sessao.
 export async function fetchJson(url, options = {}) {
   const response = await fetch(url, {
     credentials: "include",
@@ -26,12 +27,11 @@ export async function fetchJson(url, options = {}) {
   return data;
 }
 
-// Normaliza respostas que deveriam ser listas, evitando quebra visual quando a API muda.
 export function asArray(data) {
+
   return Array.isArray(data) ? data : [];
 }
 
-// Recupera o usuario salvo pelo login para exibir no cabecalho.
 export function getStoredUsername() {
   return localStorage.getItem(USERNAME_STORAGE_KEY) || "Usuario";
 }
@@ -88,7 +88,6 @@ export function clearStoredSession() {
   localStorage.removeItem(IS_ADMIN_STORAGE_KEY);
 }
 
-// Monta a URL do icone do curso quando o backend retorna apenas caminho/nome do arquivo.
 export function withCourseIcon(course) {
   if (!course || course.icon_url) return course;
 

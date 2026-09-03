@@ -8,6 +8,7 @@ import { useUsuario } from "../contexts/UsuarioContext";
 import { fetchJson } from "../utils/app";
 
 const USER_KEY = "rememberedLoginUser";
+
 const cookieOptions = () => ({
   expires: 2,
   sameSite: "lax",
@@ -115,7 +116,6 @@ const Login = () => {
     let active = true;
     const savedUser = getRememberedUser();
 
-    // Checkbox removido: carrega o usuario salvo assim que a tela abre.
     setRememberedUser(savedUser);
 
     getRememberedSessionUser().then((sessionUser) => {
@@ -135,7 +135,7 @@ const Login = () => {
   }, [atualizarUsuario, navigate]);
 
   useEffect(() => {
-    // Preenche o campo apos o navegador tentar aplicar credenciais salvas.
+
     const timer = setTimeout(() => {
       if (usernameInputRef.current && !usernameInputRef.current.value) {
         usernameInputRef.current.value = rememberedUser;
@@ -180,7 +180,7 @@ const Login = () => {
       }
 
       safe(() => atualizarUsuario(result));
-      // Checkbox removido: todo login valido passa a lembrar o usuario.
+
       saveRememberedUser(user);
       setRememberedUser(user);
       if (usernameInputRef.current) usernameInputRef.current.value = user;

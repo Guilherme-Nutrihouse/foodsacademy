@@ -11,6 +11,7 @@ const CarouselCard = ({
   onClick,
 }) => {
   const navigate = useNavigate();
+
   const imageSrc =
     icon_url || caminho_icon || icon || "/img/default-course-icon.png";
 

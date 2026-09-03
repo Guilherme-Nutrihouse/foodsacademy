@@ -12,15 +12,14 @@ const PAGE_SIZE = 10;
 const FAVORITES_STORAGE_PREFIX = "contatosFavoritos";
 const FAVORITES_FILTER = "__favoritos__";
 
-// Separa os favoritos por usuario para nao misturar preferencias no mesmo navegador.
 const getFavoritesStorageKey = (username) =>
   `${FAVORITES_STORAGE_PREFIX}:${String(username || "Usuario")
     .trim()
     .toLowerCase()}`;
 
-// Le somente IDs para manter o localStorage leve e independente da lista da API.
 const readStoredFavorites = (username) => {
   try {
+
     const data = JSON.parse(
       localStorage.getItem(getFavoritesStorageKey(username)) || "[]",
     );
@@ -35,7 +34,6 @@ const readStoredFavorites = (username) => {
   }
 };
 
-// Persiste a selecao atual sem bloquear a tela se o navegador negar acesso.
 const saveStoredFavorites = (username, favorites) => {
   try {
     localStorage.setItem(
@@ -47,8 +45,8 @@ const saveStoredFavorites = (username, favorites) => {
   }
 };
 
-// Usa o proxy/reverse proxy primeiro e cai no backend local quando o dev server devolver 404.
 const getLocalApiBase = () => {
+
   const configuredBase =
     typeof process !== "undefined" ? process.env.REACT_APP_API_URL : "";
   if (configuredBase) return configuredBase.replace(/\/$/, "");
@@ -60,7 +58,6 @@ const getLocalApiBase = () => {
   return isLocalHost ? `http://${window.location.hostname}:5000` : "";
 };
 
-// Busca contatos no endpoint relativo e tenta a porta do backend em desenvolvimento.
 const fetchContacts = async () => {
   const response = await fetch("/api/contatos", {
     credentials: "include",
@@ -94,6 +91,7 @@ const createContact = async (contato) => {
 };
 
 const updateContactRequest = async (id, contato) => {
+
   const contactId = encodeURIComponent(String(id));
   const options = {
     method: "PUT",
@@ -127,15 +125,15 @@ const deleteContactRequest = async (id) => {
   return fetch(`${localApiBase}/api/contatos/${contactId}`, options);
 };
 
-// Mantem a tela independente de utils para consumir somente a API de contatos.
 const normalizeText = (value = "") =>
+
   String(value)
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 
-// Gera as iniciais exibidas no bloco vermelho de cada contato.
 const getInitials = (name = "") =>
+
   name
     .trim()
     .split(/\s+/)
@@ -144,15 +142,15 @@ const getInitials = (name = "") =>
     .join("")
     .toUpperCase();
 
-// Monta o link do WhatsApp a partir do telefone salvo no banco.
 const getWhatsappLink = (phone = "") => {
+
   const digits = phone.replace(/\D/g, "");
   const number = digits.startsWith("55") ? digits : `55${digits}`;
   return `https://wa.me/${number}`;
 };
 
-// Copia o telefone sem depender de helpers externos.
 const copyText = async (text) => {
+
   if (!navigator.clipboard) return false;
 
   try {
@@ -183,7 +181,7 @@ function Contatos() {
   const navigate = useNavigate();
   const { usuario, isAdmin } = useUsuario();
   const username = usuario.username;
-  // Carrega favoritos do usuario logado assim que a tela abre.
+
   const [favoritos, setFavoritos] = useState(() =>
     readStoredFavorites(username),
   );
@@ -195,7 +193,6 @@ function Contatos() {
   useEffect(() => {
     let active = true;
 
-    // Busca a lista protegida pelo mesmo fluxo autenticado do backend.
     async function loadContacts() {
       try {
         setLoading(true);
@@ -225,6 +222,7 @@ function Contatos() {
 
   const departments = useMemo(
     () =>
+
       Array.from(
         new Set(
           contacts
@@ -287,10 +285,10 @@ function Contatos() {
     if (!copied) return;
 
     setCopiedId(contact.id);
+
     setTimeout(() => setCopiedId(null), 1600);
   }
 
-  // Garante retorno para a home quando nao houver historico interno disponivel.
   const voltar = () =>
     closeAnd(() => {
       if ((window.history.state?.idx ?? 0) > 0) {
@@ -301,7 +299,6 @@ function Contatos() {
       navigate("/home");
     });
 
-  // Alterna o favorito e salva a lista por usuario no localStorage.
   function toggleFavorito(id) {
     if (id === null || id === undefined) return;
 
@@ -398,7 +395,6 @@ function Contatos() {
       const contactId = String(id);
       const response = await updateContactRequest(id, contato);
 
-      // Lê o JSON apenas uma vez para manter o fluxo da resposta simples.
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
@@ -432,6 +428,7 @@ function Contatos() {
       return false;
     }
   }
+
   async function onSubmit(event) {
     event.preventDefault();
 
@@ -542,9 +539,8 @@ function Contatos() {
     <main className="flex min-h-screen flex-col overflow-x-hidden bg-[#FFFFFF] pt-[128px] font-sans sm:pt-[132px] lg:pt-[72px]">
       <Header />
 
-      {/* Usa uma camada separada para a onda nao esticar com a lista no mobile. */}
       <section className="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-4 py-6 text-[#2f2926] sm:px-6 sm:py-8 lg:px-8">
-        {/* Mantem no smartphone a mesma altura visual da onda da Home. */}
+
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-x-0 bottom-0 sm:hidden"
@@ -557,7 +553,6 @@ function Contatos() {
           }}
         />
 
-        {/* Em telas maiores, preserva a proporcao original usada na Home. */}
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-x-0 bottom-0 hidden h-[55%] bg-bottom bg-no-repeat sm:block"
@@ -567,9 +562,8 @@ function Contatos() {
           }}
         />
 
-        {/* Mantem os cards acima da camada decorativa das ondas. */}
         <section className="relative z-10 mx-auto flex w-full max-w-[1190px] flex-col gap-3">
-          {/* Filtros simples iguais ao visual enviado, sem depender do Header global. */}
+
           <div
             className={`grid gap-3 pt-3 ${
               isAdmin
@@ -577,7 +571,7 @@ function Contatos() {
                 : "md:grid-cols-[auto_1fr_260px]"
             }`}
           >
-            {/* Mantem o botao Voltar visivel e separado dos filtros. */}
+
             <button
               type="button"
               onClick={voltar}
@@ -635,7 +629,6 @@ function Contatos() {
             )}
           </div>
 
-          {/* Lista renderizada a partir dos campos da tabela contatos. */}
           <div className="flex flex-col gap-3">
             {showInput && (
               <section className="rounded-md border border-black/10 border-l-4 border-l-[#B95758] bg-white/90 p-4 shadow-sm backdrop-blur">
@@ -782,7 +775,6 @@ function Contatos() {
                       {contact.telefone}
                     </strong>
 
-                    {/* Botao de favorito usa coracao preenchido quando salvo no localStorage. */}
                     <button
                       type="button"
                       onClick={() => toggleFavorito(contact.id)}
@@ -863,7 +855,6 @@ function Contatos() {
               ))}
           </div>
 
-          {/* Paginacao local para manter 10 contatos por pagina como nas figuras. */}
           {!loading && !error && filteredContacts.length > 0 && (
             <footer className="flex flex-col gap-3 pt-3 text-sm font-bold text-[#ffffff] md:flex-row md:items-center md:justify-between">
               <span className="text-[#000000] text-sm font-bold">

@@ -7,7 +7,9 @@ const DEFAULT_DAYS = 30;
 let runtimeSecret;
 
 const env = (name) => String(process.env[name] || '').trim();
+
 const b64 = (value) => Buffer.from(value).toString('base64url');
+
 const fromB64 = (value) => Buffer.from(value, 'base64url').toString('utf8');
 
 const getSessionSecret = () => {
@@ -15,6 +17,7 @@ const getSessionSecret = () => {
   if (secret.length >= 16) return secret;
 
   if (!runtimeSecret) {
+
     runtimeSecret = crypto.randomBytes(32).toString('hex');
     logWarn(
       'REMEMBER_SESSION_SECRET ausente; cookies lembrados serao invalidados ao reiniciar o backend'
@@ -25,6 +28,7 @@ const getSessionSecret = () => {
 };
 
 const getMaxAgeMs = () => {
+
   const days = Number(process.env.REMEMBER_SESSION_DAYS);
   return (Number.isFinite(days) && days > 0 ? days : DEFAULT_DAYS) * 86400000;
 };
@@ -51,16 +55,19 @@ const getCookieOptions = (req, maxAge) => ({
 });
 
 const sign = (payload) =>
+
   crypto.createHmac('sha256', getSessionSecret()).update(payload).digest('base64url');
 
 const signaturesMatch = (expected, received = '') => {
   const left = Buffer.from(expected);
   const right = Buffer.from(received);
+
   return left.length === right.length && crypto.timingSafeEqual(left, right);
 };
 
 const createRememberSessionToken = (username, isAdmin = false, nomeCompleto = '') => {
   const payload = b64(
+
     JSON.stringify({
       username,
       nomeCompleto,
@@ -76,6 +83,7 @@ const verifyRememberSessionToken = (token) => {
   if (!payload || !signature || !signaturesMatch(sign(payload), signature)) return null;
 
   try {
+
     const { username, nomeCompleto, isAdmin, exp } = JSON.parse(fromB64(payload));
     return typeof username === 'string' &&
       username.trim() &&
@@ -94,6 +102,7 @@ const verifyRememberSessionToken = (token) => {
 };
 
 const getCookieValue = (req, name) => {
+
   const cookie = String(req.headers.cookie || '')
     .split(';')
     .map((item) => item.trim())
@@ -102,7 +111,6 @@ const getCookieValue = (req, name) => {
   return cookie ? decodeURIComponent(cookie.slice(name.length + 1)) : '';
 };
 
-// Cria cookie de sessao: persistente apenas quando o usuario marcar "lembrar".
 const setRememberSessionCookie = (
   req,
   res,
@@ -125,7 +133,6 @@ const getRememberedSession = (req) =>
 
 const getRememberedUsername = (req) => getRememberedSession(req)?.username || null;
 
-// Nome explicito para validar qualquer sessao autenticada no middleware.
 const getAuthenticatedSession = getRememberedSession;
 const getAuthenticatedUsername = getRememberedUsername;
 

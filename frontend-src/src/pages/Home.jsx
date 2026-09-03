@@ -22,13 +22,13 @@ const Home = () => {
 
   useEffect(() => {
     fetchJson("/api/cursos")
-      // Mantem a Home renderizada mesmo quando a API nao devolver uma lista.
+
       .then((data) => setCursos(asArray(data)))
       .catch((err) => console.error("Erro ao carregar cursos:", err));
   }, []);
 
   const cards = useMemo(() => {
-    // Agrupa cursos por prefixo para exibir filtros como cards de colecao.
+
     const collectionCards = COURSE_COLLECTIONS.map((collection) => {
       const cursosColecao = cursos.filter((curso) =>
         courseStartsWithPrefix(curso, collection.prefix),
@@ -48,7 +48,6 @@ const Home = () => {
       };
     });
 
-    // Oculta cursos das colecoes na lista principal para manter o mesmo fluxo da Teknisa.
     const cursosSemColecao = cursos.filter(
       (curso) =>
         !COURSE_COLLECTIONS.some((collection) =>
@@ -89,7 +88,6 @@ const Home = () => {
     if (total > 1) setPage((value) => (value + step + total) % total);
   };
 
-  // Usa a rota da colecao selecionada quando o card for um filtro.
   const openCurso = (curso) =>
     navigate(
       curso.type === "collection"

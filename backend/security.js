@@ -24,7 +24,6 @@ const redactText = (value) =>
       /(password|senha|secret|token|authorization|cookie)\s*[:=]\s*([^\s,;]+)/gi,
       '$1=[redacted]'
     );
-
 const sanitizeLogData = (data) => {
   if (data === undefined || data === null) return data;
   if (data instanceof Error) return redactText(data.message);
@@ -43,12 +42,10 @@ const sanitizeLogData = (data) => {
     ])
   );
 };
-
 const logger = (method) => (message, details) =>
   details === undefined
     ? console[method](message)
     : console[method](message, sanitizeLogData(details));
-
 const buildCorsOptions = () => {
   const allowed = String(process.env.CORS_ORIGIN || '')
     .split(',')
@@ -65,7 +62,6 @@ const buildCorsOptions = () => {
       }
     : { origin: true, credentials: true };
 };
-
 const securityHeaders = (req, res, next) => {
   [
     ['X-Content-Type-Options', 'nosniff'],

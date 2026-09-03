@@ -5,7 +5,6 @@ import Sidebar from "../components/Sidebar.jsx";
 import { useUsuario } from "../contexts/UsuarioContext";
 import { asArray, fetchJson } from "../utils/app";
 
-
 const getMaterialUrl = (caminho) => {
   const value = String(caminho || "").trim();
   if (!value) return "#";
