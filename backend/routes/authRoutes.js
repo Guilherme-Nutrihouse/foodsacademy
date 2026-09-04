@@ -130,14 +130,19 @@ const mapLdapUserAttributes = (entry) => {
   };
 };
 
-const isLdapAdmin = (ldapUser) => {
-  const groups = (Array.isArray(ldapUser.memberOf) ? ldapUser.memberOf : []).map((group) =>
-    String(group || "").toLowerCase(),
-  );
+const getLdapGroupName = (groupDN) => {
+  const match = String(groupDN || "").match(/(^|,)\s*cn=([^,]+)/i);
 
-  return ADMIN_GROUP_NAMES.some((groupName) =>
-    groups.some((groupDN) => groupDN.includes(`cn=${groupName},`) || groupDN.includes(groupName)),
-  );
+  return match ? match[2].trim().toLowerCase() : "";
+};
+
+const isLdapAdmin = (ldapUser) => {
+  const groupNames = (Array.isArray(ldapUser.memberOf) ? ldapUser.memberOf : [])
+    .map(getLdapGroupName)
+    .filter(Boolean);
+
+  // Compara somente o CN do grupo para nao liberar admin por causa da OU/pasta, como VPN dentro de Tecnologia.
+  return ADMIN_GROUP_NAMES.some((groupName) => groupNames.includes(groupName));
 };
 
 const getLdapUserAttributes = (client, userDN) =>

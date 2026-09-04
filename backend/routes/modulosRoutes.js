@@ -20,7 +20,7 @@ const upload = multer({
 const requireAdmin = (req, res, next) => {
   if (req.authUser?.isAdmin) return next();
 
-  return res.status(403).json({ error: 'Apenas administradores podem criar modulos.' });
+  return res.status(403).json({ error: 'Apenas administradores podem gerenciar modulos.' });
 };
 
 const uploadMp4 = (req, res, next) => {
@@ -246,6 +246,74 @@ router.post(
   })
 );
 
+router.put(
+  '/modulos/:id',
+  requireAdmin,
+  asyncRoute('Erro ao atualizar modulo', async (req, res) => {
+    const idModulo = Number(req.params.id);
+
+    if (!Number.isInteger(idModulo) || idModulo <= 0) {
+      return res.status(400).json({ error: 'ID do modulo invalido.' });
+    }
+
+    const moduloPayload = parseModuloPayload(req.body);
+    const titulo = String(moduloPayload.titulo || '').trim();
+
+    if (!titulo) {
+      return res.status(400).json({ error: 'Titulo do modulo e obrigatorio.' });
+    }
+
+    const [moduloAtual] = await query(
+      'SELECT id, id_curso, titulo, descricao, ordem, caminho FROM modulos WHERE id = @id',
+      {
+        id: [sql.Int, idModulo],
+      }
+    );
+
+    if (!moduloAtual) {
+      return res.status(404).json({ error: 'Modulo nao encontrado.' });
+    }
+
+    const [moduloExistente] = await query(
+      'SELECT id FROM modulos WHERE id_curso = @id_curso AND titulo = @titulo AND id <> @id',
+      {
+        id: [sql.Int, idModulo],
+        id_curso: [sql.Int, moduloAtual.id_curso],
+        titulo: [sql.NVarChar(150), titulo],
+      }
+    );
+
+    if (moduloExistente) {
+      return res.status(400).json({ error: 'Modulo ja cadastrado para este curso.' });
+    }
+
+    const hasDescricao = Object.prototype.hasOwnProperty.call(moduloPayload, 'descricao');
+    const descricaoInformada = String(moduloPayload.descricao || '').trim();
+    const descricao = hasDescricao
+      ? descricaoInformada || titulo
+      : moduloAtual.descricao === moduloAtual.titulo || !moduloAtual.descricao
+        ? titulo
+        : moduloAtual.descricao;
+
+    // Edita apenas os dados visiveis; o caminho fica estavel para manter os videos existentes acessiveis.
+    const [moduloAtualizado] = await query(
+      `UPDATE modulos
+       SET titulo = @titulo, descricao = @descricao
+       OUTPUT INSERTED.id, INSERTED.id_curso, INSERTED.titulo, INSERTED.descricao, INSERTED.ordem, INSERTED.caminho
+       WHERE id = @id`,
+      {
+        id: [sql.Int, idModulo],
+        titulo: [sql.NVarChar(150), titulo],
+        descricao: [sql.NVarChar(150), descricao],
+      }
+    );
+
+    return res.json({
+      message: 'Modulo atualizado com sucesso.',
+      modulo: moduloAtualizado,
+    });
+  })
+);
 // Insere um novo video usando somente o id_modulo e preenche id_curso a partir do modulo.
 const postVideoByModulo = asyncRoute('Erro ao adicionar novo video', async (req, res) => {
   const idModulo = Number(req.params.id_modulo);

@@ -136,6 +136,19 @@ const VideoPage = () => {
     });
   };
 
+  const handleModuloUpdated = (moduloAtualizado) => {
+    if (!moduloAtualizado) return;
+
+    setCourse((prev) => ({
+      ...prev,
+      modulos: (prev.modulos || []).map((modulo) =>
+        String(modulo.id) === String(moduloAtualizado.id)
+          ? { ...modulo, ...moduloAtualizado, videos: modulo.videos || [] }
+          : modulo,
+      ),
+    }));
+  };
+
   const handleVideoCreated = ({ idModulo, video }) => {
     if (!video) return;
 
@@ -152,13 +165,37 @@ const VideoPage = () => {
     setSelectedVideo(videoCriado);
   };
 
+  const handleVideoUpdated = (videoAtualizado) => {
+    if (!videoAtualizado) return;
+
+    const nextVideo = withPlayableVideoUrl(videoAtualizado);
+    const videoId = String(nextVideo.id);
+    const replaceVideo = (video) =>
+      String(video.id) === videoId ? { ...video, ...nextVideo } : video;
+
+    setCourse((prev) => ({
+      ...prev,
+      videos: (prev.videos || []).map(replaceVideo),
+      modulos: (prev.modulos || []).map((modulo) => ({
+        ...modulo,
+        videos: (modulo.videos || []).map(replaceVideo),
+      })),
+    }));
+
+    setSelectedVideo((prev) =>
+      prev && String(prev.id) === videoId ? { ...prev, ...nextVideo } : prev,
+    );
+  };
+
   const sidebarProps = {
     modulos: course.temModulos ? course.modulos : [],
     videos: course.temModulos ? [] : course.videos,
     setSelectedVideo,
     watchedVideos,
     onModuloCreated: handleModuloCreated,
+    onModuloUpdated: handleModuloUpdated,
     onVideoCreated: handleVideoCreated,
+    onVideoUpdated: handleVideoUpdated,
   };
 
   const Page = ({ children, sidebar = sidebarProps }) => (

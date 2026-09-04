@@ -3,10 +3,17 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Icon from "./Icon";
 import { useUsuario } from "../contexts/UsuarioContext";
 import { CertificateButton } from "./Certificate";
-import { CirclePlus } from "lucide-react";
+import { Check, CirclePlus, SquarePen, Upload, X } from "lucide-react";
 import Input from "../components/Input";
-import { Upload } from 'lucide-react';
 
+const allowedMp4Types = ["video/mp4", "application/mp4", "application/octet-stream", ""];
+
+const isValidMp4File = (file) => {
+  if (!file) return true;
+
+  const fileName = String(file.name || "").toLowerCase();
+  return fileName.endsWith(".mp4") && allowedMp4Types.includes(file.type || "");
+};
 
 const Sidebar = ({
   showButton = true,
@@ -15,7 +22,9 @@ const Sidebar = ({
   setSelectedVideo,
   watchedVideos = {},
   onModuloCreated = () => {},
+  onModuloUpdated = () => {},
   onVideoCreated = () => {},
+  onVideoUpdated = () => {},
 }) => {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -30,11 +39,20 @@ const Sidebar = ({
   const [videosLength, setVideosLength] = useState(0);
   const [cursoNome, setCursoNome] = useState("");
   const [error, setError] = useState("");
+  const [actionError, setActionError] = useState("");
   const [showInput, setShowInput] = useState(false);
   const [nomeModulo, setNomeModulo] = useState("");
+  const [editingModuloId, setEditingModuloId] = useState(null);
+  const [editingModuloName, setEditingModuloName] = useState("");
+  const [editingVideoId, setEditingVideoId] = useState(null);
+  const [editingVideoTitle, setEditingVideoTitle] = useState("");
+  const [editingVideoFile, setEditingVideoFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [updatingModuloId, setUpdatingModuloId] = useState(null);
+  const [updatingVideoId, setUpdatingVideoId] = useState(null);
   const [uploadingVideoId, setUploadingVideoId] = useState(null);
   const videoFileInputs = useRef({});
+  const editVideoFileInputRef = useRef(null);
 
   useEffect(() => {
     let active = true;
@@ -209,23 +227,251 @@ const Sidebar = ({
       </button>
     );
 
+  const ActionError = () =>
+    actionError && (
+      <p className="mb-3 rounded-md bg-white/95 px-3 py-2 text-xs font-semibold text-[#B95758] shadow-sm">
+        {actionError}
+      </p>
+    );
+
+  const updateModuloRequest = async (idModulo, modulo) => {
+    const moduloId = encodeURIComponent(String(idModulo));
+    const options = {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(modulo),
+    };
+    const response = await fetch(`/api/modulos/${moduloId}`, options);
+
+    if (response.status !== 404) return response;
+
+    const localApiBase = getLocalApiBase();
+    if (!localApiBase) return response;
+
+    return fetch(`${localApiBase}/api/modulos/${moduloId}`, options);
+  };
+
+  const updateVideoRequest = async (idVideo, formData) => {
+    const videoId = encodeURIComponent(String(idVideo));
+    const options = {
+      method: "PUT",
+      credentials: "include",
+      body: formData,
+    };
+    const response = await fetch(`/api/videos/${videoId}`, options);
+
+    if (response.status !== 404) return response;
+
+    const localApiBase = getLocalApiBase();
+    if (!localApiBase) return response;
+
+    return fetch(`${localApiBase}/api/videos/${videoId}`, options);
+  };
+
+  const startModuloEdit = (modulo) => {
+    if (!canManageModules) return;
+
+    setEditingModuloId(modulo.id);
+    setEditingModuloName(modulo.titulo || "");
+    setActionError("");
+  };
+
+  const cancelModuloEdit = () => {
+    setEditingModuloId(null);
+    setEditingModuloName("");
+    setActionError("");
+  };
+
+  const handleModuloEditSubmit = async (event, modulo) => {
+    event.preventDefault();
+
+    const nomeLimpo = editingModuloName.trim();
+
+    if (!nomeLimpo) {
+      setActionError("Nome do modulo e obrigatorio.");
+      return;
+    }
+
+    try {
+      setUpdatingModuloId(modulo.id);
+      setActionError("");
+
+      const response = await updateModuloRequest(modulo.id, { titulo: nomeLimpo });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setActionError(data.error || data.message || "Nao foi possivel atualizar o modulo.");
+        return;
+      }
+
+      onModuloUpdated(data.modulo || { ...modulo, titulo: nomeLimpo, descricao: nomeLimpo });
+      cancelModuloEdit();
+      alert(data.message || "Modulo atualizado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao atualizar modulo:", error);
+      setActionError("Erro ao conectar ao servidor.");
+    } finally {
+      setUpdatingModuloId(null);
+    }
+  };
+
+  const startVideoEdit = (video) => {
+    if (!canManageModules) return;
+
+    setEditingVideoId(video.id);
+    setEditingVideoTitle(video.titulo || video.descricao || "");
+    setEditingVideoFile(null);
+    setActionError("");
+    if (editVideoFileInputRef.current) editVideoFileInputRef.current.value = "";
+  };
+
+  const cancelVideoEdit = () => {
+    setEditingVideoId(null);
+    setEditingVideoTitle("");
+    setEditingVideoFile(null);
+    setActionError("");
+    if (editVideoFileInputRef.current) editVideoFileInputRef.current.value = "";
+  };
+
+  const handleVideoEditSubmit = async (event, video) => {
+    event.preventDefault();
+
+    const tituloVideo = editingVideoTitle.trim();
+
+    if (!tituloVideo) {
+      setActionError("Nome do video e obrigatorio.");
+      return;
+    }
+
+    if (!isValidMp4File(editingVideoFile)) {
+      setActionError("Selecione um arquivo MP4.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("titulo", tituloVideo);
+    if (editingVideoFile) formData.append("mp4", editingVideoFile, editingVideoFile.name);
+
+    try {
+      setUpdatingVideoId(video.id);
+      setActionError("");
+
+      const response = await updateVideoRequest(video.id, formData);
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setActionError(data.error || data.message || "Nao foi possivel atualizar o video.");
+        return;
+      }
+
+      onVideoUpdated(data.video || { ...video, titulo: tituloVideo, descricao: tituloVideo });
+      cancelVideoEdit();
+      alert(data.message || "Video atualizado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao atualizar video:", error);
+      setActionError("Erro ao conectar ao servidor.");
+    } finally {
+      setUpdatingVideoId(null);
+    }
+  };
+
   const VideoItem = ({ video }) => {
     const watched = watchedVideos[video.id];
+    const isEditingVideo = String(editingVideoId) === String(video.id);
+    const isUpdatingVideo = String(updatingVideoId) === String(video.id);
+
+    if (isEditingVideo) {
+      return (
+        <li className="rounded-md border border-white/20 bg-white/10 p-2">
+          <form className="space-y-2" onSubmit={(event) => handleVideoEditSubmit(event, video)}>
+            <span className="block rounded-md border border-white/20 bg-white shadow-sm">
+              <Input
+                value={editingVideoTitle}
+                onChange={(event) => setEditingVideoTitle(event.target.value)}
+                placeholder="Nome do video"
+              />
+            </span>
+
+            <input
+              ref={editVideoFileInputRef}
+              type="file"
+              accept="video/mp4,.mp4"
+              className="hidden"
+              onChange={(event) => {
+                setEditingVideoFile(event.target.files?.[0] || null);
+                setActionError("");
+              }}
+            />
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => editVideoFileInputRef.current?.click()}
+                title="Trocar MP4"
+                aria-label="Trocar MP4"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/25 bg-white/10 text-white transition hover:bg-white hover:text-[#B95758]"
+              >
+                <Upload className="h-4 w-4" strokeWidth={2.4} />
+              </button>
+
+              <span className="min-w-0 flex-1 truncate text-xs text-white/85">
+                {editingVideoFile?.name || "MP4 opcional"}
+              </span>
+
+              <button
+                type="submit"
+                disabled={isUpdatingVideo}
+                title="Salvar video"
+                aria-label="Salvar video"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white text-[#B95758] transition hover:bg-yellow-100 disabled:cursor-wait disabled:opacity-60"
+              >
+                <Check className="h-4 w-4" strokeWidth={2.4} />
+              </button>
+
+              <button
+                type="button"
+                onClick={cancelVideoEdit}
+                title="Cancelar"
+                aria-label="Cancelar"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/25 bg-white/10 text-white transition hover:bg-white hover:text-[#B95758]"
+              >
+                <X className="h-4 w-4" strokeWidth={2.4} />
+              </button>
+            </div>
+          </form>
+        </li>
+      );
+    }
+
     return (
-      <li
-        onClick={() => selectVideo(video)}
-        className={`flex cursor-pointer items-start gap-3 rounded-md px-1 py-1 transition ${watched ? "text-green-300" : "hover:text-yellow-200"
-          }`}
-        title={video.titulo || video.descricao}
-      >
-        <Icon
-          name="check"
-          className={`h-[18px] w-[18px] shrink-0 ${watched ? "text-green-400" : "text-white"
-            }`}
-        />
-        <span className="min-w-0 flex-1 break-words leading-tight">
-          {video.titulo || video.descricao}
-        </span>
+      <li className="flex items-start gap-2">
+        <button
+          type="button"
+          onClick={() => selectVideo(video)}
+          className={`flex min-w-0 flex-1 cursor-pointer items-start gap-3 rounded-md px-1 py-1 text-left transition ${watched ? "text-green-300" : "hover:text-yellow-200"}`}
+          title={video.titulo || video.descricao}
+        >
+          <Icon
+            name="check"
+            className={`h-[18px] w-[18px] shrink-0 ${watched ? "text-green-400" : "text-white"}`}
+          />
+          <span className="min-w-0 flex-1 break-words leading-tight">
+            {video.titulo || video.descricao}
+          </span>
+        </button>
+
+        {canManageModules && (
+          <button
+            type="button"
+            onClick={() => startVideoEdit(video)}
+            aria-label={`Editar video ${video.titulo || video.descricao}`}
+            title="Editar video"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-white/20 bg-white/10 text-white transition hover:bg-white hover:text-[#B95758]"
+          >
+            <SquarePen className="h-3.5 w-3.5" strokeWidth={2.4} />
+          </button>
+        )}
       </li>
     );
   };
@@ -298,55 +544,99 @@ const Sidebar = ({
       setUploadingVideoId(null);
     }
   };
+
   const NavigationList = () => (
     <ul className="custom-scrollbar min-h-0 flex-1 space-y-5 overflow-y-auto pr-1 text-sm">
       {modulos.length ? (
         modulos.map((modulo) => {
           const isUploadingVideo = String(uploadingVideoId) === String(modulo.id);
+          const isEditingModulo = String(editingModuloId) === String(modulo.id);
+          const isUpdatingModulo = String(updatingModuloId) === String(modulo.id);
 
           return (
             <li key={modulo.id}>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setModuloAberto(moduloAberto === modulo.id ? null : modulo.id)
-                  }
-                  className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left font-semibold transition hover:text-yellow-200"
-                >
-                  <span className="min-w-0 flex-1 truncate">{modulo.titulo}</span>
-                  <Icon
-                    name="right"
-                    className={`h-4 w-4 shrink-0 transition-transform ${moduloAberto === modulo.id ? "rotate-90" : ""
-                      }`}
-                  />
-                </button>
-
-                {canManageModules && (
-                  <>
-                    <input
-                      ref={(input) => {
-                        if (input) videoFileInputs.current[modulo.id] = input;
-                        else delete videoFileInputs.current[modulo.id];
-                      }}
-                      type="file"
-                      accept="video/mp4,.mp4"
-                      className="hidden"
-                      onChange={(event) => handleVideoFileChange(event, modulo)}
+              {isEditingModulo ? (
+                <form className="flex items-center gap-2" onSubmit={(event) => handleModuloEditSubmit(event, modulo)}>
+                  <span className="min-w-0 flex-1 rounded-md border border-white/20 bg-white shadow-sm">
+                    <Input
+                      value={editingModuloName}
+                      onChange={(event) => setEditingModuloName(event.target.value)}
+                      placeholder="Nome do modulo"
                     />
-                    <button
-                      type="button"
-                      disabled={isUploadingVideo}
-                      onClick={() => videoFileInputs.current[modulo.id]?.click()}
-                      aria-label={`Enviar video para ${modulo.titulo}`}
-                      title="Enviar video"
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/25 bg-white/10 text-white transition hover:bg-white hover:text-[#B95758] disabled:cursor-wait disabled:opacity-60"
-                    >
-                      <Upload className="h-4 w-4" strokeWidth={2.4} />
-                    </button>
-                  </>
-                )}
-              </div>
+                  </span>
+
+                  <button
+                    type="submit"
+                    disabled={isUpdatingModulo}
+                    aria-label="Salvar modulo"
+                    title="Salvar modulo"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white text-[#B95758] transition hover:bg-yellow-100 disabled:cursor-wait disabled:opacity-60"
+                  >
+                    <Check className="h-4 w-4" strokeWidth={2.4} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={cancelModuloEdit}
+                    aria-label="Cancelar"
+                    title="Cancelar"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/25 bg-white/10 text-white transition hover:bg-white hover:text-[#B95758]"
+                  >
+                    <X className="h-4 w-4" strokeWidth={2.4} />
+                  </button>
+                </form>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setModuloAberto(moduloAberto === modulo.id ? null : modulo.id)
+                    }
+                    className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left font-semibold transition hover:text-yellow-200"
+                  >
+                    <span className="min-w-0 flex-1 truncate">{modulo.titulo}</span>
+                    <Icon
+                      name="right"
+                      className={`h-4 w-4 shrink-0 transition-transform ${moduloAberto === modulo.id ? "rotate-90" : ""}`}
+                    />
+                  </button>
+
+                  {canManageModules && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => startModuloEdit(modulo)}
+                        aria-label={`Editar modulo ${modulo.titulo}`}
+                        title="Editar modulo"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/25 bg-white/10 text-white transition hover:bg-white hover:text-[#B95758]"
+                      >
+                        <SquarePen className="h-4 w-4" strokeWidth={2.4} />
+                      </button>
+
+                      <input
+                        ref={(input) => {
+                          if (input) videoFileInputs.current[modulo.id] = input;
+                          else delete videoFileInputs.current[modulo.id];
+                        }}
+                        type="file"
+                        accept="video/mp4,.mp4"
+                        className="hidden"
+                        onChange={(event) => handleVideoFileChange(event, modulo)}
+                      />
+                      <button
+                        type="button"
+                        disabled={isUploadingVideo}
+                        onClick={() => videoFileInputs.current[modulo.id]?.click()}
+                        aria-label={`Enviar video para ${modulo.titulo}`}
+                        title="Enviar video"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/25 bg-white/10 text-white transition hover:bg-white hover:text-[#B95758] disabled:cursor-wait disabled:opacity-60"
+                      >
+                        <Upload className="h-4 w-4" strokeWidth={2.4} />
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
 
               {moduloAberto === modulo.id && (
                 <ul className="mt-3 space-y-3 pl-3">
@@ -447,18 +737,18 @@ const Sidebar = ({
               </button>
               <div className="absolute left-10 top-1/2 hidden -translate-y-1/2 whitespace-nowrap rounded-md bg-yellow-400 px-2 py-1 text-xs text-white shadow-md group-hover:block">
                 {location.pathname.includes("/materiais")
-                  ? "Voltar ao vídeo"
-                  : "Voltar a Página Anterior"}
+                  ? "Voltar ao video"
+                  : "Voltar a Pagina Anterior"}
               </div>
             </div>
 
-            <h2 className="min-w-0 flex-1 text-lg font-bold uppercase tracking-wide">MÓDULOS</h2>
+            <h2 className="min-w-0 flex-1 text-lg font-bold uppercase tracking-wide">MODULOS</h2>
             {canManageModules && (
               <button
                 type="button"
                 onClick={() => setShowInput((prev) => !prev)}
-                aria-label="Adicionar módulo"
-                title="Adicionar módulo"
+                aria-label="Adicionar modulo"
+                title="Adicionar modulo"
                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/30 text-white shadow-sm transition hover:bg-white hover:text-[#B95758] ${showInput ? "bg-white text-[#B95758]" : "bg-white/10"}`}
               >
                 <CirclePlus className="h-5 w-5" strokeWidth={2.4} />
@@ -474,7 +764,7 @@ const Sidebar = ({
                   <span className="mt-1 block">
                     <Input
                       name="nome"
-                      placeholder="Nome do módulo"
+                      placeholder="Nome do modulo"
                       value={nomeModulo}
                       onChange={(e) => setNomeModulo(e.target.value)}
                     />
@@ -492,13 +782,14 @@ const Sidebar = ({
                   disabled={submitting}
                   className="flex min-h-10 w-full items-center justify-center rounded-md bg-[#B95758] px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-[#9f3f40] disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  {submitting ? "Criando..." : "Criar módulo"}
+                  {submitting ? "Criando..." : "Criar modulo"}
                 </button>
               </form>
             </section>
           )}
         </div>
 
+        <ActionError />
         <NavigationList />
         {canDownloadCertificate && isUserSessionChecked && (
           <CertificateButton
@@ -525,14 +816,14 @@ const Sidebar = ({
           </button>
 
           <h2 className="min-w-0 flex-1 truncate text-center text-base font-bold uppercase tracking-wide">
-            MÓDULOS
+            MODULOS
           </h2>
 
           <button
             type="button"
             onClick={() => setIsMobileOpen((value) => !value)}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md transition hover:bg-white/15"
-            aria-label="Abrir módulos"
+            aria-label="Abrir modulos"
             aria-expanded={isMobileOpen}
           >
             <Icon name={isMobileOpen ? "close" : "menu"} className="h-6 w-6" />
@@ -542,6 +833,7 @@ const Sidebar = ({
         {isMobileOpen && (
           <div className="border-t border-white/20 px-4 pb-4">
             <div className="custom-scrollbar max-h-[calc(100vh-5rem)] overflow-y-auto pt-4">
+              <ActionError />
               <NavigationList />
 
               {canDownloadCertificate && isUserSessionChecked && (

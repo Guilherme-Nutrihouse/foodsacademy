@@ -15,7 +15,7 @@ const navLinks = [
   ["CONTATOS", "/contatos"],
 ];
 
-const Header = ({ username: usernameProp, search, setSearch }) => {
+const Header = ({ username: usernameProp, search, setSearch, onCourseCreated }) => {
   const [accountOpen, setAccountOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [titulo, setTitulo] = useState("");
@@ -107,6 +107,8 @@ const Header = ({ username: usernameProp, search, setSearch }) => {
         );
         return;
       }
+
+      if (data.curso && onCourseCreated) onCourseCreated(data.curso);
 
       setTitulo("");
       setShowInput(false);

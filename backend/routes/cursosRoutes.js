@@ -30,7 +30,7 @@ const sanitizeCaminho = (titulo) =>
 const requireAdmin = (req, res, next) => {
   if (req.authUser?.isAdmin) return next();
 
-  return res.status(403).json({ error: 'Apenas administradores podem criar cursos.' });
+  return res.status(403).json({ error: 'Apenas administradores podem gerenciar cursos.' });
 };
 
 const uploadPng = (req, res, next) => {
@@ -132,6 +132,14 @@ const withIcon = (curso) => ({
     : curso.caminho_icon || null,
 });
 
+const removeIconFile = async (fileName) => {
+  const safeFileName = path.basename(String(fileName || ''));
+
+  if (!safeFileName) return;
+
+  await fs.promises.unlink(path.join(iconesDir, safeFileName)).catch(() => undefined);
+};
+
 router.get(
   '/cursos',
   asyncRoute('Erro ao buscar cursos', async (req, res) => {
@@ -215,6 +223,84 @@ router.post(
       });
     } catch (error) {
       await fs.promises.unlink(filePath).catch(() => undefined);
+      throw error;
+    }
+  })
+);
+
+router.put(
+  '/cursos/:id',
+  requireAdmin,
+  uploadPng,
+  asyncRoute('Erro ao atualizar curso', async (req, res) => {
+    const idCurso = Number(req.params.id);
+
+    if (!Number.isInteger(idCurso) || idCurso <= 0) {
+      return res.status(400).json({ error: 'ID do curso invalido.' });
+    }
+
+    if (req.file && !isPng(req.file)) {
+      return res.status(400).json({ error: 'Envie um arquivo PNG valido.' });
+    }
+
+    const curso = parseCursoPayload(req.body);
+    const titulo = String(curso.titulo || '').trim();
+
+    if (!titulo) {
+      return res.status(400).json({ error: 'Titulo do curso e obrigatorio.' });
+    }
+
+    let nextIcon = null;
+    let nextIconPath = null;
+
+    if (req.file) {
+      await fs.promises.mkdir(iconesDir, { recursive: true });
+      nextIcon = await getUniqueFileName(iconesDir, sanitizeFileName(req.file.originalname));
+      nextIconPath = path.join(iconesDir, nextIcon);
+      await fs.promises.writeFile(nextIconPath, req.file.buffer);
+    }
+
+    try {
+      const params = {
+        id: [sql.Int, idCurso],
+        titulo: [sql.NVarChar(150), titulo],
+      };
+
+      let updateSql = `UPDATE cursos
+        SET titulo = @titulo
+        OUTPUT INSERTED.id, INSERTED.titulo, INSERTED.caminho, INSERTED.icon, INSERTED.caminho_icon, DELETED.icon AS icon_anterior
+        WHERE id = @id`;
+
+      if (nextIcon) {
+        params.icon = [sql.NVarChar(50), nextIcon];
+        params.caminho_icon = [sql.NVarChar(100), '/icons_cursos'];
+
+        // Mantem o caminho do curso para preservar pastas, videos e materiais ja publicados.
+        updateSql = `UPDATE cursos
+          SET titulo = @titulo, icon = @icon, caminho_icon = @caminho_icon
+          OUTPUT INSERTED.id, INSERTED.titulo, INSERTED.caminho, INSERTED.icon, INSERTED.caminho_icon, DELETED.icon AS icon_anterior
+          WHERE id = @id`;
+      }
+
+      const [cursoAtualizado] = await query(updateSql, params);
+
+      if (!cursoAtualizado) {
+        if (nextIconPath) await fs.promises.unlink(nextIconPath).catch(() => undefined);
+        return res.status(404).json({ error: 'Curso nao encontrado.' });
+      }
+
+      if (nextIcon && cursoAtualizado.icon_anterior !== nextIcon) {
+        await removeIconFile(cursoAtualizado.icon_anterior);
+      }
+
+      const { icon_anterior, ...cursoResponse } = cursoAtualizado;
+
+      return res.json({
+        message: 'Curso atualizado com sucesso.',
+        curso: withIcon(cursoResponse),
+      });
+    } catch (error) {
+      if (nextIconPath) await fs.promises.unlink(nextIconPath).catch(() => undefined);
       throw error;
     }
   })

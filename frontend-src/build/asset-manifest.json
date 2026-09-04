@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.1a0387c3.css",
-    "main.js": "/static/js/main.dd9d1429.js",
+    "main.css": "/static/css/main.d9f82fdd.css",
+    "main.js": "/static/js/main.301649b6.js",
     "static/media/logo_novo.png": "/static/media/logo_novo.68f54386d10f9f342ca3.png",
     "static/media/doll2.png": "/static/media/doll2.6448e8bcf799fefeba0d.png",
     "static/media/logo_novo.svg": "/static/media/logo_novo.8fd777b3e5cecdf913d237174f5b2262.svg",
@@ -15,11 +15,11 @@
     "static/media/background_onda3.jpg": "/static/media/background_onda3.1946a8502efa3d47fb4d.jpg",
     "static/media/background_onda1.jpg": "/static/media/background_onda1.67cf247a7e8338f4f8b3.jpg",
     "index.html": "/index.html",
-    "main.1a0387c3.css.map": "/static/css/main.1a0387c3.css.map",
-    "main.dd9d1429.js.map": "/static/js/main.dd9d1429.js.map"
+    "main.d9f82fdd.css.map": "/static/css/main.d9f82fdd.css.map",
+    "main.301649b6.js.map": "/static/js/main.301649b6.js.map"
   },
   "entrypoints": [
-    "static/css/main.1a0387c3.css",
-    "static/js/main.dd9d1429.js"
+    "static/css/main.d9f82fdd.css",
+    "static/js/main.301649b6.js"
   ]
 }
